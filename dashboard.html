@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Patch &amp; Posy</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="images/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="dashboard-body">
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div class="dash-login-screen" id="dash-login-screen">
+  <div class="dash-login-box">
+    <div class="dash-login-mark">Patch &amp; Posy</div>
+    <h1>Dashboard login</h1>
+    <p class="dash-login-sub">Sign in with the admin account you created in Firebase Authentication.</p>
+    <form id="dash-login-form">
+      <label for="dash-email">Email</label>
+      <input id="dash-email" type="email" required autocomplete="username">
+      <label for="dash-password">Password</label>
+      <input id="dash-password" type="password" required autocomplete="current-password">
+      <button type="submit" class="btn-primary">Sign in</button>
+      <p class="dash-login-status" id="dash-login-status" role="status"></p>
+    </form>
+    <p class="dash-login-note">Not configured yet? See <code>SETUP.md</code> for how to create your Firebase project and admin login.</p>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD (shown only after successful login) ============ -->
+<div class="dash-app" id="dash-app" hidden>
+  <header class="dash-header">
+    <div class="dash-header-inner">
+      <div class="dash-brand">Patch &amp; Posy — Dashboard</div>
+      <div class="dash-header-right">
+        <span id="dash-user-email" class="dash-user-email"></span>
+        <button type="button" class="btn-secondary" id="dash-logout-btn">Log out</button>
+      </div>
+    </div>
+    <nav class="dash-tabs">
+      <button type="button" class="dash-tab is-active" data-tab="orders">Orders</button>
+      <button type="button" class="dash-tab" data-tab="clients">Clients</button>
+      <button type="button" class="dash-tab" data-tab="local">Unsynced local orders</button>
+    </nav>
+  </header>
+
+  <main class="dash-main">
+    <!-- ORDERS TAB -->
+    <section class="dash-panel is-active" id="panel-orders">
+      <div class="dash-panel-head">
+        <h2>Orders</h2>
+        <div class="dash-filters">
+          <select id="orders-status-filter">
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button type="button" class="btn-secondary" id="orders-refresh-btn">Refresh</button>
+        </div>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>City</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body">
+            <tr><td colspan="8" class="dash-empty">Loading orders…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CLIENTS TAB -->
+    <section class="dash-panel" id="panel-clients">
+      <div class="dash-panel-head">
+        <h2>Clients</h2>
+        <p class="dash-panel-sub">Built automatically from your order history — one row per unique email address.</p>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>City</th>
+              <th>Orders</th>
+              <th>Total spent</th>
+            </tr>
+          </thead>
+          <tbody id="clients-table-body">
+            <tr><td colspan="6" class="dash-empty">Loading clients…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- LOCAL (UNSYNCED) ORDERS TAB -->
+    <section class="dash-panel" id="panel-local">
+      <div class="dash-panel-head">
+        <h2>Unsynced local orders</h2>
+        <p class="dash-panel-sub">Orders placed while Firebase wasn't reachable are kept here, in this browser only, until synced.</p>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="local-orders-table-body">
+            <tr><td colspan="5" class="dash-empty">None right now.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="drawer-overlay" id="order-detail-overlay"></div>
+<div class="modal order-detail-modal" id="order-detail-modal" role="dialog" aria-label="Order details">
+  <div class="modal-inner">
+    <button type="button" class="drawer-close" id="order-detail-close" aria-label="Close">✕</button>
+    <h3 id="order-detail-title">Order</h3>
+    <div id="order-detail-body"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+
+<script src="js/store-config.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

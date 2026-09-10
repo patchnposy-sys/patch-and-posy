@@ -213,8 +213,9 @@ header{
   position:absolute; inset: 6px;
   border: 1.5px dashed rgba(92,58,34,0.4);
   border-radius: 3px;
-  pointer-events:none;
+  pointer-events: none;
 }
+
 .patch-photo{
   aspect-ratio: 1/1;
   border-radius: 2px;
@@ -223,13 +224,7 @@ header{
   color: rgba(74,46,27,0.55);
   position: relative; overflow:hidden;
 }
-.patch-tag{
-  position:absolute; top:10px; left:10px;
-  font-size:0.68rem; font-weight:700; letter-spacing:0.03em;
-  background: var(--paper); color: var(--brown);
-  padding: 4px 9px; border-radius: 999px; z-index:2;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-}
+
 .patch-info{ padding: 14px 6px 0; }
 .patch-info h3{ font-size: 1.05rem; font-weight:600; }
 .patch-info .price{

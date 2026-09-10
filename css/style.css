@@ -217,13 +217,22 @@ header{
   pointer-events: none;
 }
 
-.patch-photo{
-  aspect-ratio: 1/1;
-  border-radius: 2px;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Fraunces', serif; font-size: 0.85rem; font-style: italic;
-  color: rgba(74,46,27,0.55);
-  position: relative; overflow:hidden;
+.patch-photo .patch-tag {
+  position: absolute !important;
+  top: 10px;
+  left: 10px;
+  margin: 0;
+  display: inline-block;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: #C0396B;   /* strong rose/brand color — change if you prefer another */
+  color: #FFFFFF;
+  padding: 4px 9px;
+  border-radius: 999px;
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .patch-info{ padding: 14px 6px 0; }

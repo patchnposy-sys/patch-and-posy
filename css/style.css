@@ -217,56 +217,24 @@ header{
   pointer-events: none;
 }
 
-.patch-photo .patch-tag {
-  position: absolute !important;
-  top: 10px;
-  left: 10px;
-  margin: 0;
-  display: inline-block;
-  text-align: left;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  background: #C0396B;   /* strong rose/brand color — change if you prefer another */
-  color: #FFFFFF;
-  padding: 4px 9px;
-  border-radius: 999px;
-  z-index: 3;
+.patch-photo{
+  position: relative;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  border-radius: 2px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Fraunces', serif; font-size: 0.85rem; font-style: italic;
+  color: rgba(74,46,27,0.55);
+}
+
+.patch-tag{
+  position:absolute; top:10px; left:10px;
+  font-size:0.68rem; font-weight:700; letter-spacing:0.03em;
+  background: #FFFFFF; color: var(--brown);
+  padding: 4px 9px; border-radius: 999px; z-index:2;
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
-
-.story-body p {
-  color: #4A2E1B !important;
-  line-height: 1.7;
-  white-space: pre-line;
-}
-
-.story-body blockquote {
-  color: #4A2E1B !important;
-  border-left: 3px solid #C0396B;
-  padding-left: 16px;
-  font-style: italic;
-}
-
-.story-body blockquote cite {
-  display: block;
-  margin-top: 8px;
-  font-style: normal;
-  font-weight: 600;
-}
-
-.story-visual {
-  position: relative;
-  overflow: hidden;
-  border-radius: 4px;
-}
-
-.story-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+.patch-tag-available{ background: var(--teal); color: var(--paper); }
 
 .patch-info{ padding: 14px 6px 0; }
 .patch-info h3{ font-size: 1.05rem; font-weight:600; }
@@ -383,15 +351,26 @@ header{
   position:relative;
   aspect-ratio: 4/5;
   border-radius: 6px;
+  overflow: hidden;
   background:
     repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 12px, transparent 12px 24px),
     linear-gradient(160deg, var(--teal), var(--raspberry-deep) 55%, var(--mustard));
   display:flex; align-items:center; justify-content:center;
   box-shadow: 0 20px 40px rgba(0,0,0,0.25);
 }
+.story-photo{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .story-visual .quote-mark{
+  position: relative;
+  z-index: 2;
   font-family:'Fraunces', serif; font-size: 6rem; color: rgba(255,255,255,0.85);
   line-height:1;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
 }
 .story h2{ color: var(--cream); font-size: clamp(1.8rem,3vw,2.4rem); }
 .story blockquote{

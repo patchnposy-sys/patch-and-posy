@@ -20,12 +20,13 @@
  */
 
 const FIREBASE_CONFIG = {
-  apiKey: "PASTE_YOUR_API_KEY_HERE",
-  authDomain: "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "PASTE_YOUR_PROJECT_ID",
-  storageBucket: "PASTE_YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "PASTE_YOUR_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID"
+ apiKey: "AIzaSyD6lbP2x1jVwwaXhYqh09PZY4SsddilFFE",
+  authDomain: "patch-and-posy.firebaseapp.com",
+  projectId: "patch-and-posy",
+  storageBucket: "patch-and-posy.firebasestorage.app",
+  messagingSenderId: "340072166087",
+  appId: "1:340072166087:web:a94fb5e0ca4590df4e44e2",
+  measurementId: "G-NNTCPQJBTW"
 };
 
 // Initialized once and reused by cart.js/checkout.js/dashboard.js.

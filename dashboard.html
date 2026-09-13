@@ -44,6 +44,7 @@
     <nav class="dash-tabs">
       <button type="button" class="dash-tab is-active" data-tab="orders">Orders</button>
       <button type="button" class="dash-tab" data-tab="clients">Clients</button>
+      <button type="button" class="dash-tab" data-tab="products">Products</button>
       <button type="button" class="dash-tab" data-tab="local">Unsynced local orders</button>
     </nav>
   </header>
@@ -111,6 +112,30 @@
       </div>
     </section>
 
+    <!-- PRODUCTS TAB -->
+    <section class="dash-panel" id="panel-products">
+      <div class="dash-panel-head">
+        <h2>Products</h2>
+        <p class="dash-panel-sub">Live AVAILABLE / SOLD status for every product — updates the website instantly, no code changes needed. Automatically set to SOLD when an order comes in via WhatsApp or the website checkout.</p>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Default (in code)</th>
+              <th>Live status</th>
+            </tr>
+          </thead>
+          <tbody id="products-table-body">
+            <tr><td colspan="5" class="dash-empty">Loading products…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- LOCAL (UNSYNCED) ORDERS TAB -->
     <section class="dash-panel" id="panel-local">
       <div class="dash-panel-head">
@@ -153,6 +178,7 @@
 
 <script src="js/store-config.js"></script>
 <script src="js/firebase-config.js"></script>
+<script src="js/products-data.js"></script>
 <script src="js/dashboard.js"></script>
 </body>
 </html>

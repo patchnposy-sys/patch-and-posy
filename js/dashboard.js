@@ -87,6 +87,7 @@ function initTabs() {
       tab.classList.add("is-active");
       document.getElementById(`panel-${tab.dataset.tab}`).classList.add("is-active");
       if (tab.dataset.tab === "clients") renderClients();
+      if (tab.dataset.tab === "products") loadProductStatuses();
       if (tab.dataset.tab === "local") renderLocalOrders();
     });
   });
@@ -291,6 +292,82 @@ async function syncLocalOrder(index) {
   } catch (err) {
     console.error("Sync failed:", err);
     alert("Sync failed — check your connection and Firestore rules.");
+  }
+}
+
+/* ---------- Products (live AVAILABLE / SOLD status) ---------- */
+let liveProductStatuses = {};
+
+function getCatalogProducts() {
+  return [
+    ...(typeof SPREADS !== "undefined" ? SPREADS : []),
+    ...(typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []),
+    ...(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
+  ];
+}
+
+async function loadProductStatuses() {
+  const fb = initFirebase();
+  const tbody = document.getElementById("products-table-body");
+  if (!fb || !fb.db || !tbody) return;
+
+  try {
+    const snapshot = await fb.db.collection("productStatus").get();
+    liveProductStatuses = {};
+    snapshot.docs.forEach((doc) => { liveProductStatuses[doc.id] = doc.data().status; });
+    renderProductsTable();
+  } catch (err) {
+    console.error("Failed to load product statuses:", err);
+    tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">Couldn't load product statuses. Check your Firestore Security Rules.</td></tr>`;
+  }
+}
+
+function renderProductsTable() {
+  const tbody = document.getElementById("products-table-body");
+  if (!tbody) return;
+
+  const products = getCatalogProducts();
+  if (products.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = products.map((p) => {
+    const liveStatus = liveProductStatuses[p.id] || p.tag || "AVAILABLE";
+    return `
+      <tr>
+        <td>${escapeHTML(p.id)}</td>
+        <td>${escapeHTML(p.name)}</td>
+        <td>${escapeHTML(p.category || p.subcategory || "—")}</td>
+        <td>${escapeHTML(p.tag || "—")}</td>
+        <td>
+          <select class="dash-status-select" data-product-id="${escapeHTML(p.id)}">
+            ${["AVAILABLE", "SOLD"].map(s =>
+              `<option value="${s}" ${liveStatus.toUpperCase() === s ? "selected" : ""}>${s}</option>`
+            ).join("")}
+          </select>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.querySelectorAll(".dash-status-select").forEach((select) => {
+    select.addEventListener("change", () => updateProductStatus(select.dataset.productId, select.value));
+  });
+}
+
+async function updateProductStatus(productId, status) {
+  const fb = initFirebase();
+  if (!fb || !fb.db) return;
+  try {
+    await fb.db.collection("productStatus").doc(productId).set({
+      status,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    liveProductStatuses[productId] = status;
+  } catch (err) {
+    console.error("Failed to update product status:", err);
+    alert("Couldn't update this product's status. Please try again.");
   }
 }
 

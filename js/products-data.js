@@ -176,12 +176,15 @@ const SPREADS = [
    TABLECLOTHS — Luxury & Daily Wear
    Sample placeholders — swap in real photos & details any time.
    subcategory must be exactly "luxury" or "daily".
+   size (optional) — a short display string, e.g.
+     "4-Seater Square · 54×54 in" or "6-Seater Rectangle · 60×90 in"
    ============================================================ */
 const TABLECLOTHS = [
   {
     id: "T-L001",
     name: "T-L001 Heirloom Damask",
     subcategory: "luxury",
+    size: "4-Seater Square · 54×54 in",
     desc: "A statement-worthy tablecloth in rich jacquard-style patchwork with a hand-finished scalloped edge — made for festive dinners and guests who notice details.",
     price: 12500,
     tag: "COMING SOON",
@@ -192,6 +195,7 @@ const TABLECLOTHS = [
     id: "T-L002",
     name: "T-L002 Royal Ajrak Runner Set",
     subcategory: "luxury",
+    size: "6-Seater Rectangle · 60×90 in",
     desc: "Deep indigo Ajrak-inspired patchwork paired with raw silk trim — a tablecloth and matching runner set for special occasions.",
     price: 15000,
     tag: "COMING SOON",
@@ -202,6 +206,7 @@ const TABLECLOTHS = [
     id: "T-D001",
     name: "T-D001 Everyday Gingham",
     subcategory: "daily",
+    size: "4-Seater Square · 54×54 in",
     desc: "A durable, easy-wash cotton patchwork cloth in a cheerful gingham mix — built for everyday family meals, not just special occasions.",
     price: 4500,
     tag: "COMING SOON",
@@ -212,6 +217,7 @@ const TABLECLOTHS = [
     id: "T-D002",
     name: "T-D002 Kitchen Table Patch",
     subcategory: "daily",
+    size: "6-Seater Rectangle · 54×80 in",
     desc: "A relaxed, low-maintenance patchwork tablecloth in soft pastel scraps — sized for smaller breakfast and kitchen tables.",
     price: 3800,
     tag: "COMING SOON",
@@ -223,11 +229,15 @@ const TABLECLOTHS = [
 /* ============================================================
    ACCESSORIES
    Sample placeholders — swap in real photos & details any time.
+   category — groups items under filter chips on the site, e.g.
+     "Coasters", "Pouches", "Hoop Art", "Bread Cloths",
+     "Tea Cozies", "Pot Holders", "Aprons", "Bags"
    ============================================================ */
 const ACCESSORIES = [
   {
     id: "A-001",
     name: "A-001 Patchwork Coaster Set (4)",
+    category: "Coasters",
     desc: "A set of four hand-pieced coasters in mixed scrap fabrics — quilted, quick-drying, and generously sized for mugs and teapots alike.",
     price: 2200,
     tag: "COMING SOON",
@@ -237,6 +247,7 @@ const ACCESSORIES = [
   {
     id: "A-002",
     name: "A-002 Little Pouch",
+    category: "Pouches",
     desc: "A zippered patchwork pouch, lined in soft cotton — handy for makeup, stationery, or keeping small treasures together.",
     price: 1800,
     tag: "COMING SOON",
@@ -246,11 +257,82 @@ const ACCESSORIES = [
   {
     id: "A-003",
     name: "A-003 Hoop Art — Floral",
+    category: "Hoop Art",
     desc: "A hand-embroidered floral hoop, finished and ready to hang — a small, framed piece of the same patience that goes into every spread.",
     price: 3200,
     tag: "COMING SOON",
     image: "",
     swatch: ["#C0396B", "#8FBF6E", "#F3ECDD"]
+  },
+  {
+    id: "A-004",
+    name: "A-004 Kitchen Bread Cloth",
+    category: "Bread Cloths",
+    desc: "A soft patchwork cloth for lining bread baskets or covering dough while it proves — simple, homely, and practical.",
+    price: 1500,
+    tag: "COMING SOON",
+    image: "",
+    swatch: ["#E0A83E", "#F3ECDD", "#8A6B4D"]
+  },
+  {
+    id: "A-005",
+    name: "A-005 Cosy Tea Cozy",
+    category: "Tea Cozies",
+    desc: "A quilted, insulated tea cozy in mixed patchwork scraps — keeps the pot warm for a second (or third) cup.",
+    price: 2000,
+    tag: "COMING SOON",
+    image: "",
+    swatch: ["#1C8577", "#E0794F", "#F3ECDD"]
+  },
+  {
+    id: "A-006",
+    name: "A-006 Patchwork Pot Holder",
+    category: "Pot Holders",
+    desc: "A double-layered, heat-resistant pot holder pieced from mixed scraps — as sturdy as it is pretty.",
+    price: 1200,
+    tag: "COMING SOON",
+    image: "",
+    swatch: ["#C0396B", "#E0A83E", "#8A6B4D"]
+  },
+  {
+    id: "A-007",
+    name: "A-007 Kitchen Apron",
+    category: "Aprons",
+    desc: "A full-length patchwork apron with a deep front pocket — made for real cooking, not just for show.",
+    price: 3500,
+    tag: "COMING SOON",
+    image: "",
+    swatch: ["#8FBF6E", "#F3ECDD", "#3E6B8A"]
+  },
+  {
+    id: "A-008",
+    name: "A-008 Everyday Patchwork Bag",
+    category: "Bags",
+    desc: "A sturdy, roomy patchwork tote for market runs and everyday errands — lined, with reinforced handles.",
+    price: 4200,
+    tag: "COMING SOON",
+    image: "",
+    swatch: ["#E8879C", "#3E6B8A", "#F3ECDD"]
+  }
+];
+
+/* ============================================================
+   VOLUME 1 EVENT GALLERY — HabittCity Popup, August 2026
+   Add your event photos here. Save the actual photo files into
+   images/event/ and reference them below. caption is optional.
+   ============================================================ */
+const EVENT_GALLERY = [
+  {
+    image: "images/event/habittcity-01.jpg",
+    caption: "Our stall at HabittCity Popup"
+  },
+  {
+    image: "images/event/habittcity-02.jpg",
+    caption: "Patchwork Spreads on display"
+  },
+  {
+    image: "images/event/habittcity-03.jpg",
+    caption: "Meeting customers on launch day"
   }
 ];
 

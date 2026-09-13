@@ -140,6 +140,12 @@ async function submitOrder(event) {
 
   const emailResults = await sendOrderEmails(order);
 
+  // Each design is a one-of-a-kind, single-unit piece — once it's
+  // ordered (from the website, same as via WhatsApp), it's sold out.
+  if (typeof markProductSold === "function") {
+    order.items.forEach((item) => markProductSold(item.id));
+  }
+
   submitBtn.disabled = false;
   showOrderConfirmation(order, emailResults);
   clearCart();

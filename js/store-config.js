@@ -24,6 +24,10 @@ const STORE_CONFIG = {
   // Where the "new order" notification email is sent.
   adminEmail: "patchnposy@gmail.com",
 
+  // WhatsApp number for "Order via WhatsApp" buttons, in international
+  // format with no spaces, dashes, or leading zero (country code + number).
+  whatsappNumber: "923002382769",
+
   // Currency prefix used everywhere a price is displayed.
   currencyPrefix: "Rs. "
 };

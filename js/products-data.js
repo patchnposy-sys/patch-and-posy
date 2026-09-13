@@ -40,7 +40,7 @@ const SPREADS = [
     name: "S-0001 Sunset Gingham",
     desc: "A cheerful blend of warm terracotta, soft yellow, and muted green checks. The classic gingham rhythm gives this patchwork a cosy, timeless charm—like the warmth of a sunset settling into a garden",
     price: 8500,
-    tag: "SOLD",
+    tag: "AVAILABLE",
     image: "images/20260809_101840.jpg",
     swatch: ["#E0A83E", "#8FBF6E", "#1C8577"]
   },
@@ -49,7 +49,7 @@ const SPREADS = [
     name: "S-0002 Gulrang",
     desc: "A vibrant blend of traditional Ajrak-inspired prints and bold fuchsia, arranged in a timeless checkerboard pattern. The earthy heritage motifs meet bright pops of colour, creating a spread that feels rooted in tradition yet fresh and contemporary.",
     price: 8500,
-    tag: "SOLD",
+    tag: "AVAILABLE",
     image: "images/20260809_101952.jpg",
     swatch: ["#F3ECDD", "#E8879C", "#C0396B"]
   },
@@ -58,7 +58,7 @@ const SPREADS = [
     name: "S-0003 Lilac Bloom",
     desc: "A soft blend of lilac and white tones arranged in a classic Half-Square Triangle (HST) geometric pattern, creating interlocking diamond and pinwheel-like optical effects. Hand-quilted, reversible.",
     price: 8500,
-    tag: "SOLD",
+    tag: "AVAILABLE",
     image: "images/20260809_101619.jpg",
     swatch: ["#3E6B8A", "#E0A83E", "#C0396B"]
   },

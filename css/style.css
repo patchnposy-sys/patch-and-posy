@@ -466,3 +466,45 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
 }
 
 :focus-visible{ outline: 2px solid var(--raspberry-deep); outline-offset: 3px; }
+
+.filter-chips{
+  display:flex; flex-wrap:wrap; gap:10px;
+  margin-bottom: 32px;
+}
+.chip{
+  border: 1.5px solid var(--brown); border-radius: 999px;
+  padding: 8px 18px; font-size:0.88rem; font-weight:600;
+  color: var(--brown); background: none;
+}
+.chip:hover{ background: var(--cream-deep); }
+.chip.is-active{ background: var(--brown); color: var(--cream); }
+
+.lightbox-modal{ background: transparent; box-shadow:none; max-width: 90vw; }
+.lightbox-inner{ padding:0; }
+.lightbox-inner img{
+  width:100%; border-radius:6px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+.lightbox-caption{
+  color: var(--cream); text-align:center; margin-top:12px; font-size:0.9rem;
+}
+.lightbox-inner .drawer-close{
+  position:absolute; top:-40px; right:0;
+  color: var(--cream); font-size:1.4rem;
+}
+
+.event-gallery{
+  display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+.event-photo{
+  border:none; padding:0; background:none; cursor:pointer;
+  aspect-ratio: 4/3; overflow:hidden; border-radius:6px;
+}
+.event-photo img{
+  width:100%; height:100%; object-fit:cover;
+  transition: transform 0.25s ease;
+}
+.event-photo:hover img{ transform: scale(1.05); }
+@media (max-width: 640px){
+  .event-gallery{ grid-template-columns: repeat(2, 1fr); }
+}

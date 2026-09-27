@@ -92,7 +92,8 @@
       <h2>Accessories</h2>
       <p>Small handmade pieces — coasters, pouches, and hoop art — for the little corners of a home that deserve warmth too.</p>
     </div>
-    <div class="patch-grid" id="accessories-grid"></div>
+    <div class="filter-chips" id="accessories-filters"></div>
+    <div id="accessories-content"></div>
   </div>
 </section>
 
@@ -253,6 +254,16 @@ From my mother's Singer to my PFAFF, the machines may be different, but the love
     <button type="button" class="drawer-close" id="confirm-modal-close" aria-label="Close">✕</button>
     <h3>Order received 🎉</h3>
     <div id="confirm-body"></div>
+  </div>
+</div>
+
+<!-- ============ EVENT PHOTO LIGHTBOX ============ -->
+<div class="drawer-overlay" id="lightbox-overlay"></div>
+<div class="modal lightbox-modal" id="lightbox-modal" role="dialog" aria-label="Photo">
+  <div class="modal-inner lightbox-inner">
+    <button type="button" class="drawer-close" id="lightbox-close" aria-label="Close">✕</button>
+    <img id="lightbox-image" src="" alt="">
+    <p class="lightbox-caption" id="lightbox-caption"></p>
   </div>
 </div>
 

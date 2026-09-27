@@ -269,7 +269,7 @@ const ACCESSORIES = [
     name: "A-004 Kitchen Bread Cloth",
     category: "Bread Cloths",
     desc: "A simple, good quality sewn cloth. Use it to keep rotis warm off the tawa, or line your bread basket on the dining table.",
-    price: "Rs. 250",
+    price: 250,
     tag: "COMING SOON",
     image: "",
     swatch: ["#E0A83E", "#F3ECDD", "#8A6B4D"]
@@ -279,7 +279,7 @@ const ACCESSORIES = [
     name: "A-005 Cosy Tea Cozy",
     category: "Tea Cozies",
     desc: "A quilted cozy tea cozy for every tea break - keeps your tea warm, in pretty floral and printed fabrics.",
-    price: "Rs. 500",
+    price: 500,
     tag: "COMING SOON",
     image: "",
     swatch: ["#1C8577", "#E0794F", "#F3ECDD"]

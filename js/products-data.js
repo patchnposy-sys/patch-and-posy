@@ -267,7 +267,7 @@ const ACCESSORIES = [
   },
   --- */
 
-  /* --- Shown on the site --- */
+  /* --- Tea cozy placeholder (replaced by TEA_COZIES below) ---
   {
     id: "A-005",
     name: "A-005 Cosy Tea Cozy",
@@ -278,6 +278,7 @@ const ACCESSORIES = [
     image: "",
     swatch: ["#1C8577", "#E0794F", "#F3ECDD"]
   },
+  --- */
 
   /* --- Hidden for now ---
   {
@@ -345,6 +346,38 @@ BREAD_CLOTHS.forEach((b) => {
     image: images[0],
     gallery: images,
     swatch: b.swatch
+  });
+});
+
+/* ============================================================
+   TEA COZIES — 2 designs, 2 photos each
+   Folder: images/V2-TeaCozies/ (no spaces; file names must match
+   exactly, including capitals and the extension). Thumbnail.JPG is
+   the card shown on the site, not a product.
+   ============================================================ */
+const TEA_COZY_FOLDER = "images/V2-TeaCozies/";
+const TEA_COZY_THUMBNAIL = TEA_COZY_FOLDER + "Thumbnail.JPG";
+
+/* One description shared by all tea cozies. Shown once, in the popup. */
+const TEA_COZY_DESCRIPTION = "A quilted cozy for every tea break — keeps your tea warm, in pretty floral and printed fabrics.";
+
+/* Price is a placeholder (same as the old A-005 tea cozy) — set yours. */
+const TEA_COZIES = [
+  { id: "A-005", design: "Design 1", photos: ["TC1a.JPG", "TC1b.JPG"] },
+  { id: "A-024", design: "Design 2", photos: ["TC2a.JPG", "TC2b.JPG"] }
+];
+
+TEA_COZIES.forEach((t) => {
+  const images = t.photos.map(file => TEA_COZY_FOLDER + encodeURI(file));
+  ACCESSORIES.push({
+    id: t.id,
+    name: "Tea Cozy — " + t.design,
+    category: "Tea Cozies",
+    desc: TEA_COZY_DESCRIPTION,
+    price: 500,
+    tag: "AVAILABLE",
+    image: images[0],
+    gallery: images
   });
 });
 

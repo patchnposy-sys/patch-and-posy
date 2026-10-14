@@ -7,7 +7,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   renderGrid("spreads-grid", typeof SPREADS !== "undefined" ? SPREADS : []);
   renderGrid("tablecloths-luxury-grid", (typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []).filter(p => p.subcategory === "luxury"));
-  renderGrid("tablecloths-daily-grid", (typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []).filter(p => p.subcategory === "daily"));
+  // Daily Wear is hidden for now.
+  // renderGrid("tablecloths-daily-grid", (typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []).filter(p => p.subcategory === "daily"));
   renderAccessories(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : []);
   renderEventGallery(typeof EVENT_GALLERY !== "undefined" ? EVENT_GALLERY : []);
 
@@ -16,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initLightbox();
   initBreadModal();
   initPotModal();
+  initTeaModal();
 
   if (typeof initFirebase === "function") initFirebase();
   if (typeof initEmailJS === "function") initEmailJS();
@@ -78,7 +80,10 @@ function renderAccessories(products) {
   const contentEl = document.getElementById("accessories-content");
   if (!filtersEl || !contentEl) return;
 
-  const categories = [...new Set(products.map(p => p.category || "Other"))];
+  const ACCESSORY_ORDER = ["Tea Cozies", "Pot Holders", "Bread Cloths"];
+  const rank = (c) => { const i = ACCESSORY_ORDER.indexOf(c); return i === -1 ? 99 : i; };
+  const categories = [...new Set(products.map(p => p.category || "Other"))]
+    .sort((a, b) => rank(a) - rank(b));
 
   filtersEl.innerHTML = [`<button type="button" class="chip is-active" data-filter="all">All</button>`]
     .concat(categories.map(cat => `<button type="button" class="chip" data-filter="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`))
@@ -89,16 +94,16 @@ function renderAccessories(products) {
       ? categories
       : [filter];
 
-    contentEl.innerHTML = groups.map(cat => {
-      if (cat === "Bread Cloths") return breadThumbnailHTML();
+    const cards = groups.map(cat => {
+      if (cat === "Tea Cozies") return teaThumbnailHTML();
       if (cat === "Pot Holders") return potThumbnailHTML();
+      if (cat === "Bread Cloths") return breadThumbnailHTML();
       const items = products.filter(p => (p.category || "Other") === cat);
-      if (items.length === 0) return "";
-      return `
-        <h3 class="subsection-title">${escapeHTML(cat)}</h3>
-        <div class="patch-grid">${items.map(productCardHTML).join("")}</div>
-      `;
+      return items.map(productCardHTML).join("");
     }).join("");
+
+    // One grid for every accessory, so the cards sit in a single row.
+    contentEl.innerHTML = `<div class="patch-grid">${cards}</div>`;
 
     attachAddToBagHandlers();
     attachWhatsAppHandlers();
@@ -177,15 +182,12 @@ function breadProducts() {
 
 function breadThumbnailHTML() {
   return `
-    <h3 class="subsection-title">Bread Cloths</h3>
-    <div class="patch-grid">
-      <div class="patch bread-thumb">
-        <div class="patch-photo" style="background-image:url('${escapeHTML(BREAD_CLOTH_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
-        <div class="patch-info">
-          <h3>Bread Cloths</h3>
-          <p class="desc">Four colours. Tap to see the designs and add to basket.</p>
-          <button type="button" class="btn-add-bag bread-open">View colours</button>
-        </div>
+    <div class="patch bread-thumb">
+      <div class="patch-photo" style="background-image:url('${escapeHTML(BREAD_CLOTH_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+      <div class="patch-info">
+        <h3>Bread Cloths</h3>
+        <p class="desc">Four colours. Tap to see the designs and add to basket.</p>
+        <button type="button" class="btn-add-bag bread-open">View colours</button>
       </div>
     </div>`;
 }
@@ -464,15 +466,12 @@ function potProducts() {
 
 function potThumbnailHTML() {
   return `
-    <h3 class="subsection-title">Pot Holders</h3>
-    <div class="patch-grid">
-      <div class="patch pot-thumb">
-        <div class="patch-photo" style="background-image:url('${escapeHTML(POT_HOLDER_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
-        <div class="patch-info">
-          <h3>Pot Holders</h3>
-          <p class="desc">Eleven designs. Tap to see them and add to basket.</p>
-          <button type="button" class="btn-add-bag pot-open">View designs</button>
-        </div>
+    <div class="patch pot-thumb">
+      <div class="patch-photo" style="background-image:url('${escapeHTML(POT_HOLDER_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+      <div class="patch-info">
+        <h3>Pot Holders</h3>
+        <p class="desc">Eleven designs. Tap to see them and add to basket.</p>
+        <button type="button" class="btn-add-bag pot-open">View designs</button>
       </div>
     </div>`;
 }
@@ -553,5 +552,103 @@ function initPotModal() {
   document.getElementById("pot-overlay")?.addEventListener("click", closePotModal);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closePotModal();
+  });
+}
+
+
+/* ---------- Tea cozies: thumbnail → design list → photos + buy buttons ---------- */
+function teaProducts() {
+  return (typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
+    .filter(p => p.category === "Tea Cozies");
+}
+
+function teaThumbnailHTML() {
+  return `
+    <div class="patch tea-thumb">
+      <div class="patch-photo" style="background-image:url('${escapeHTML(TEA_COZY_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+      <div class="patch-info">
+        <h3>Tea Cozies</h3>
+        <p class="desc">Two designs. Tap to see them and add to basket.</p>
+        <button type="button" class="btn-add-bag tea-open">View designs</button>
+      </div>
+    </div>`;
+}
+
+function openTeaModal() {
+  const overlay = document.getElementById("tea-overlay");
+  const modal = document.getElementById("tea-modal");
+  if (!overlay || !modal) return;
+  showTeaDesigns();
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeTeaModal() {
+  const overlay = document.getElementById("tea-overlay");
+  const modal = document.getElementById("tea-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  document.body.style.overflow = "";
+}
+
+function showTeaDesigns() {
+  const body = document.getElementById("tea-body");
+  if (!body) return;
+
+  body.innerHTML = `
+    <h3 class="bread-title">Tea Cozies</h3>
+    <p class="bread-description">${escapeHTML(TEA_COZY_DESCRIPTION)}</p>
+    <p class="bread-hint">Choose a design to see it up close.</p>
+    <div class="bread-colour-grid">
+      ${teaProducts().map(p => `
+        <button type="button" class="bread-colour" data-tea-id="${escapeHTML(p.id)}">
+          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <span>${escapeHTML(p.name.replace("Tea Cozy — ", ""))}</span>
+        </button>`).join("")}
+    </div>`;
+
+  body.querySelectorAll("[data-tea-id]").forEach((btn) => {
+    btn.addEventListener("click", () => showTeaDetail(btn.dataset.teaId));
+  });
+}
+
+function showTeaDetail(id) {
+  const body = document.getElementById("tea-body");
+  const p = teaProducts().find(x => x.id === id);
+  if (!body || !p) return;
+
+  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+
+  body.innerHTML = `
+    <button type="button" class="bread-back" id="tea-back">← All designs</button>
+    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
+    <div class="bread-photos">
+      ${photos.map(src => `<img src="${escapeHTML(src)}" alt="${escapeHTML(p.name)}" loading="lazy">`).join("")}
+    </div>
+    <p class="price">${formatPKR(p.price)}</p>
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
+      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
+        <button type="button" class="btn-add-bag" data-product-id="${escapeHTML(p.id)}">Add to basket</button>
+        <button type="button" class="btn-whatsapp" data-product-id="${escapeHTML(p.id)}">Order via WhatsApp</button>
+      </div>
+    </div>`;
+
+  document.getElementById("tea-back").addEventListener("click", showTeaDesigns);
+  attachAddToBagHandlers();
+  attachWhatsAppHandlers();
+  applyLiveProductStatuses();
+}
+
+function initTeaModal() {
+  // Delegated, so it keeps working when the accessories row re-renders on filter change.
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".tea-open, .tea-thumb")) openTeaModal();
+  });
+  document.getElementById("tea-close")?.addEventListener("click", closeTeaModal);
+  document.getElementById("tea-overlay")?.addEventListener("click", closeTeaModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeTeaModal();
   });
 }

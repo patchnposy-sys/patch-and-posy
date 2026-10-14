@@ -229,11 +229,12 @@ const TABLECLOTHS = [
 /* ============================================================
    ACCESSORIES
    Sample placeholders — swap in real photos & details any time.
-   category — groups items under filter chips on the site, e.g.
-     "Coasters", "Pouches", "Hoop Art", "Bread Cloths",
-     "Tea Cozies", "Pot Holders", "Aprons", "Bags"
+   category — groups items under filter chips on the site.
+   Currently shown: "Tea Cozies", "Pot Holders", "Bread Cloths".
+   Other categories are commented out in the array below.
    ============================================================ */
 const ACCESSORIES = [
+  /* --- Hidden for now (kept here so they can be switched back on) ---
   {
     id: "A-001",
     name: "A-001 Patchwork Coaster Set (4)",
@@ -264,6 +265,9 @@ const ACCESSORIES = [
     image: "",
     swatch: ["#C0396B", "#8FBF6E", "#F3ECDD"]
   },
+  --- */
+
+  /* --- Shown on the site --- */
   {
     id: "A-005",
     name: "A-005 Cosy Tea Cozy",
@@ -274,6 +278,8 @@ const ACCESSORIES = [
     image: "",
     swatch: ["#1C8577", "#E0794F", "#F3ECDD"]
   },
+
+  /* --- Hidden for now ---
   {
     id: "A-006",
     name: "A-006 Patchwork Pot Holder",
@@ -304,6 +310,7 @@ const ACCESSORIES = [
     image: "",
     swatch: ["#E8879C", "#3E6B8A", "#F3ECDD"]
   }
+  --- */
 ];
 
 /* ============================================================
@@ -338,6 +345,50 @@ BREAD_CLOTHS.forEach((b) => {
     image: images[0],
     gallery: images,
     swatch: b.swatch
+  });
+});
+
+/* ============================================================
+   POT HOLDERS (pinch pot holders) — 11 designs, one photo each
+   Folder: images/V2-PotHolders/ (no spaces; file names must match
+   exactly, including capitals and the extension — the server is
+   case-sensitive). Thumbnail.JPG is the card shown on the site,
+   not a product.
+   ============================================================ */
+const POT_HOLDER_FOLDER = "images/V2-PotHolders/";
+const POT_HOLDER_THUMBNAIL = POT_HOLDER_FOLDER + "Thumbnail.JPG";
+
+/* One description shared by all pot holders (same construction;
+   only the fabric differs). Shown once, in the popup. */
+const POT_HOLDER_DESCRIPTION = "A double-layered, heat-resistant pinch pot holder pieced from mixed scraps — as sturdy as it is pretty.";
+
+/* Edit the design names if you want to label them differently.
+   Price is a placeholder (same as the old A-006 pot holder) — set yours. */
+const POT_HOLDERS = [
+  { id: "A-013", design: "Design 1",  photos: ["IMG_1391.JPG"] },
+  { id: "A-014", design: "Design 2",  photos: ["IMG_1392.JPG"] },
+  { id: "A-015", design: "Design 3",  photos: ["IMG_1393.JPG"] },
+  { id: "A-016", design: "Design 4",  photos: ["IMG_1394.JPG"] },
+  { id: "A-017", design: "Design 5",  photos: ["IMG_1395.JPG"] },
+  { id: "A-018", design: "Design 6",  photos: ["IMG_1396.JPG"] },
+  { id: "A-019", design: "Design 7",  photos: ["IMG_1397.JPG"] },
+  { id: "A-020", design: "Design 8",  photos: ["IMG_1398.JPG"] },
+  { id: "A-021", design: "Design 9",  photos: ["IMG_1399.JPG"] },
+  { id: "A-022", design: "Design 10", photos: ["IMG_1400.JPG"] },
+  { id: "A-023", design: "Design 11", photos: ["IMG_1401.JPG"] }
+];
+
+POT_HOLDERS.forEach((h) => {
+  const images = h.photos.map(file => POT_HOLDER_FOLDER + encodeURI(file));
+  ACCESSORIES.push({
+    id: h.id,
+    name: "Pot Holder — " + h.design,
+    category: "Pot Holders",
+    desc: POT_HOLDER_DESCRIPTION,
+    price: 1200,
+    tag: "AVAILABLE",
+    image: images[0],
+    gallery: images
   });
 });
 

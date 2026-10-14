@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNewsletterForm();
   initLightbox();
   initBreadModal();
+  initPotModal();
 
   if (typeof initFirebase === "function") initFirebase();
   if (typeof initEmailJS === "function") initEmailJS();
@@ -90,6 +91,7 @@ function renderAccessories(products) {
 
     contentEl.innerHTML = groups.map(cat => {
       if (cat === "Bread Cloths") return breadThumbnailHTML();
+      if (cat === "Pot Holders") return potThumbnailHTML();
       const items = products.filter(p => (p.category || "Other") === cat);
       if (items.length === 0) return "";
       return `
@@ -451,4 +453,105 @@ function initNewsletterForm() {
   function isValidEmail(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }
+}
+
+
+/* ---------- Pot holders: thumbnail → design list → photo + buy buttons ---------- */
+function potProducts() {
+  return (typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
+    .filter(p => p.category === "Pot Holders");
+}
+
+function potThumbnailHTML() {
+  return `
+    <h3 class="subsection-title">Pot Holders</h3>
+    <div class="patch-grid">
+      <div class="patch pot-thumb">
+        <div class="patch-photo" style="background-image:url('${escapeHTML(POT_HOLDER_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+        <div class="patch-info">
+          <h3>Pot Holders</h3>
+          <p class="desc">Eleven designs. Tap to see them and add to basket.</p>
+          <button type="button" class="btn-add-bag pot-open">View designs</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openPotModal() {
+  const overlay = document.getElementById("pot-overlay");
+  const modal = document.getElementById("pot-modal");
+  if (!overlay || !modal) return;
+  showPotDesigns();
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closePotModal() {
+  const overlay = document.getElementById("pot-overlay");
+  const modal = document.getElementById("pot-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  document.body.style.overflow = "";
+}
+
+function showPotDesigns() {
+  const body = document.getElementById("pot-body");
+  if (!body) return;
+
+  body.innerHTML = `
+    <h3 class="bread-title">Pot Holders</h3>
+    <p class="bread-description">${escapeHTML(POT_HOLDER_DESCRIPTION)}</p>
+    <p class="bread-hint">Choose a design to see it up close.</p>
+    <div class="bread-colour-grid">
+      ${potProducts().map(p => `
+        <button type="button" class="bread-colour" data-pot-id="${escapeHTML(p.id)}">
+          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <span>${escapeHTML(p.name.replace("Pot Holder — ", ""))}</span>
+        </button>`).join("")}
+    </div>`;
+
+  body.querySelectorAll("[data-pot-id]").forEach((btn) => {
+    btn.addEventListener("click", () => showPotDetail(btn.dataset.potId));
+  });
+}
+
+function showPotDetail(id) {
+  const body = document.getElementById("pot-body");
+  const p = potProducts().find(x => x.id === id);
+  if (!body || !p) return;
+
+  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+
+  body.innerHTML = `
+    <button type="button" class="bread-back" id="pot-back">← All designs</button>
+    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
+    <div class="bread-photos">
+      ${photos.map(src => `<img src="${escapeHTML(src)}" alt="${escapeHTML(p.name)}" loading="lazy">`).join("")}
+    </div>
+    <p class="price">${formatPKR(p.price)}</p>
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
+      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
+        <button type="button" class="btn-add-bag" data-product-id="${escapeHTML(p.id)}">Add to basket</button>
+        <button type="button" class="btn-whatsapp" data-product-id="${escapeHTML(p.id)}">Order via WhatsApp</button>
+      </div>
+    </div>`;
+
+  document.getElementById("pot-back").addEventListener("click", showPotDesigns);
+  attachAddToBagHandlers();
+  attachWhatsAppHandlers();
+  applyLiveProductStatuses();
+}
+
+function initPotModal() {
+  // Delegated, so it keeps working when the accessories grid re-renders on filter change.
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".pot-open, .pot-thumb")) openPotModal();
+  });
+  document.getElementById("pot-close")?.addEventListener("click", closePotModal);
+  document.getElementById("pot-overlay")?.addEventListener("click", closePotModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePotModal();
+  });
 }

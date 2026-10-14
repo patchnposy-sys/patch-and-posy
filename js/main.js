@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMobileMenu();
   initNewsletterForm();
   initLightbox();
+  initBreadModal();
 
   if (typeof initFirebase === "function") initFirebase();
   if (typeof initEmailJS === "function") initEmailJS();
@@ -88,6 +89,7 @@ function renderAccessories(products) {
       : [filter];
 
     contentEl.innerHTML = groups.map(cat => {
+      if (cat === "Bread Cloths") return breadThumbnailHTML();
       const items = products.filter(p => (p.category || "Other") === cat);
       if (items.length === 0) return "";
       return `
@@ -162,6 +164,107 @@ function initLightbox() {
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeLightbox();
+  });
+}
+
+/* ---------- Bread cloths: thumbnail → colour list → both photos + buy buttons ---------- */
+function breadProducts() {
+  return (typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
+    .filter(p => p.category === "Bread Cloths");
+}
+
+function breadThumbnailHTML() {
+  return `
+    <h3 class="subsection-title">Bread Cloths</h3>
+    <div class="patch-grid">
+      <div class="patch bread-thumb">
+        <div class="patch-photo" style="background-image:url('${escapeHTML(BREAD_CLOTH_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+        <div class="patch-info">
+          <h3>Bread Cloths</h3>
+          <p class="desc">Four colours. Tap to see the designs and add to basket.</p>
+          <button type="button" class="btn-add-bag bread-open">View colours</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openBreadModal() {
+  const overlay = document.getElementById("bread-overlay");
+  const modal = document.getElementById("bread-modal");
+  if (!overlay || !modal) return;
+  showBreadColours();
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeBreadModal() {
+  const overlay = document.getElementById("bread-overlay");
+  const modal = document.getElementById("bread-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  document.body.style.overflow = "";
+}
+
+function showBreadColours() {
+  const body = document.getElementById("bread-body");
+  if (!body) return;
+
+  body.innerHTML = `
+    <h3 class="bread-title">Bread Cloths</h3>
+    <p class="bread-description">${escapeHTML(BREAD_CLOTH_DESCRIPTION)}</p>
+    <p class="bread-hint">Choose a colour to see the designs.</p>
+    <div class="bread-colour-grid">
+      ${breadProducts().map(p => `
+        <button type="button" class="bread-colour" data-colour-id="${escapeHTML(p.id)}">
+          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <span>${escapeHTML(p.name.replace("Bread Cloth — ", ""))}</span>
+        </button>`).join("")}
+    </div>`;
+
+  body.querySelectorAll("[data-colour-id]").forEach((btn) => {
+    btn.addEventListener("click", () => showBreadDetail(btn.dataset.colourId));
+  });
+}
+
+function showBreadDetail(id) {
+  const body = document.getElementById("bread-body");
+  const p = breadProducts().find(x => x.id === id);
+  if (!body || !p) return;
+
+  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+
+  body.innerHTML = `
+    <button type="button" class="bread-back" id="bread-back">← All colours</button>
+    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
+    <div class="bread-photos">
+      ${photos.map(src => `<img src="${escapeHTML(src)}" alt="${escapeHTML(p.name)}" loading="lazy">`).join("")}
+    </div>
+    <p class="price">${formatPKR(p.price)}</p>
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
+      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
+        <button type="button" class="btn-add-bag" data-product-id="${escapeHTML(p.id)}">Add to basket</button>
+        <button type="button" class="btn-whatsapp" data-product-id="${escapeHTML(p.id)}">Order via WhatsApp</button>
+      </div>
+    </div>`;
+
+  document.getElementById("bread-back").addEventListener("click", showBreadColours);
+  attachAddToBagHandlers();
+  attachWhatsAppHandlers();
+  applyLiveProductStatuses();
+}
+
+function initBreadModal() {
+  // Delegated, so it keeps working when the accessories grid re-renders on filter change.
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".bread-open, .bread-thumb")) openBreadModal();
+  });
+
+  document.getElementById("bread-close")?.addEventListener("click", closeBreadModal);
+  document.getElementById("bread-overlay")?.addEventListener("click", closeBreadModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeBreadModal();
   });
 }
 
@@ -246,7 +349,7 @@ async function applyLiveProductStatuses() {
 
 function setCardStatus(productId, status) {
   if (!status) return;
-  const card = document.querySelector(`.patch[data-product-id="${cssEscape(productId)}"]`);
+  const card = document.querySelector(`[data-product-id="${cssEscape(productId)}"]`);
   if (!card) return;
 
   const tagEl = card.querySelector(`[data-tag-for="${cssEscape(productId)}"]`);

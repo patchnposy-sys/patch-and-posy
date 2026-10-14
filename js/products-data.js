@@ -306,29 +306,37 @@ const ACCESSORIES = [
   }
 ];
 
-/* Bread cloths — one entry per photo in images/V2-Bread Cloths/ */
+/* ============================================================
+   BREAD CLOTHS — 4 colours, 2 photos each
+   Folder: images/V2-BreadCloths/ (no spaces; file names must match
+   exactly, including capitals — the server is case-sensitive).
+   Mix.JPG is the thumbnail shown on the site, not a product.
+   ============================================================ */
+const BREAD_CLOTH_FOLDER = "images/V2-BreadCloths/";
+const BREAD_CLOTH_THUMBNAIL = BREAD_CLOTH_FOLDER + "Mix.JPG";
+
+/* One description shared by all bread cloths (they are all the same
+   construction; only the print differs). Shown once, in the popup. */
+const BREAD_CLOTH_DESCRIPTION = "A simple, good quality sewn cloth. Use it to keep rotis warm off the tawa, or line your bread basket on the dining table.";
+
 const BREAD_CLOTHS = [
-  { colour: "Blue 1",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"] },
-  { colour: "Blue 2",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"] },
-  { colour: "Grey 1",  swatch: ["#8A8F99", "#D9DCE1", "#F3ECDD"] },
-  { colour: "Grey 2",  swatch: ["#8A8F99", "#D9DCE1", "#F3ECDD"] },
-  { colour: "Mix",     swatch: ["#E0A83E", "#8FBF6E", "#C0396B"] },
-  { colour: "Red 1",   swatch: ["#C0396B", "#E8879C", "#F3ECDD"] },
-  { colour: "Red 2",   swatch: ["#C0396B", "#E8879C", "#F3ECDD"] },
-  { colour: "White 1", swatch: ["#F3ECDD", "#FBF7EE", "#C0396B"] },
-  { colour: "White 2", swatch: ["#F3ECDD", "#FBF7EE", "#C0396B"] }
+  { id: "A-009", colour: "Blue",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"], photos: ["Blue1.JPG", "Blue2.JPG"] },
+  { id: "A-010", colour: "Grey",  swatch: ["#8A8F99", "#D9DCE1", "#F3ECDD"], photos: ["Grey1.JPG", "Grey2.JPG"] },
+  { id: "A-011", colour: "Red",   swatch: ["#C0396B", "#E8879C", "#F3ECDD"], photos: ["Red1.JPG", "Red2.JPG"] },
+  { id: "A-012", colour: "White", swatch: ["#F3ECDD", "#FBF7EE", "#C0396B"], photos: ["White1.JPG", "White2.JPG"] }
 ];
 
-BREAD_CLOTHS.forEach((b, i) => {
-  const id = "A-" + String(9 + i).padStart(3, "0");
+BREAD_CLOTHS.forEach((b) => {
+  const images = b.photos.map(file => BREAD_CLOTH_FOLDER + encodeURI(file));
   ACCESSORIES.push({
-    id: id,
-    name: id + " Bread Cloth — " + b.colour,
+    id: b.id,
+    name: "Bread Cloth — " + b.colour,
     category: "Bread Cloths",
     desc: "A simple, good quality sewn cloth. Use it to keep rotis warm off the tawa, or line your bread basket on the dining table.",
     price: 250,
-    tag: "COMING SOON",
-    image: "images/V2-Bread%20Cloths/" + encodeURIComponent(b.colour) + ".jpg",
+    tag: "AVAILABLE",
+    image: images[0],
+    gallery: images,
     swatch: b.swatch
   });
 });
@@ -360,7 +368,9 @@ const EVENT_GALLERY = [
    TABLECLOTHS and ACCESSORIES directly. */
 const PRODUCTS = SPREADS;
 
-/* Spread photos now live in images/V1-Bed Spreads/ (same file names) */
+/* Spread photos live in images/V1-BedSpreads/ (same file names).
+   CHECK: this must match the folder name exactly, including capitals. */
+const V1_SPREADS_FOLDER = "images/V1-BedSpreads/";
 SPREADS.forEach(p => {
-  p.image = "images/V1-Bed%20Spreads/" + p.image.split("/").pop();
+  p.image = V1_SPREADS_FOLDER + p.image.split("/").pop();
 });

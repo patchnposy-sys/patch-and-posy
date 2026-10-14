@@ -591,3 +591,28 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
 @media (min-width: 700px){ .tablecloth-card{ grid-template-columns: 1fr 1fr; align-items:start; } }
 .tablecloth-card-photo{ position:relative; aspect-ratio: 1 / 1; overflow:hidden; border-radius:4px; background:#EFE6D2; }
 .tablecloth-card-info h3{ margin: 0 0 8px; }
+
+
+/* Tablecloth picker (popup) */
+.tablecloth-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (min-width: 700px){ .tablecloth-grid{ grid-template-columns: repeat(4, 1fr); } }
+.tablecloth-tile{
+  background: none; border: 0; padding: 0; font: inherit; color: inherit;
+  display: flex; flex-direction: column; gap: 6px; text-align: left; cursor: pointer;
+}
+.tablecloth-tile:disabled{ cursor: default; opacity: .85; }
+.tablecloth-tile-photo{
+  position: relative; display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 3 / 4; overflow: hidden; border-radius: 6px; background: #EFE6D2;
+}
+.tablecloth-tile-blank{ font-style: italic; color: #8A6B4D; }
+.tablecloth-tile-name{ font-weight: 600; }
+.tablecloth-tile-desc{ font-size: .9rem; color: #8A6B4D; line-height: 1.5; }
+
+/* Vibrant flash when Tablecloths is opened from any link (#tablecloths) */
+@keyframes tc-flash {
+  0%   { background-color: #D6336C; }
+  100% { background-color: transparent; }
+}
+#tablecloths:target{ animation: tc-flash 2.8s ease-out 1; }
+#tablecloths:target .collection-banner{ box-shadow: 0 0 0 4px #D6336C; }

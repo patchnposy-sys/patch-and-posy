@@ -182,7 +182,9 @@ const SPREADS = [
 const TABLECLOTH_FOLDER = "images/V2-Tablecloths/";
 const TABLECLOTH_THUMBNAIL = TABLECLOTH_FOLDER + "Thumbnail.JPG";
 
-/* Price and description are placeholders — set your own. */
+/* Tablecloth 01 is the real product: card photo = TC01c, detail = all three photos.
+   02–04 are placeholders for upcoming designs (no photos, "COMING SOON").
+   Price and description are placeholders — set your own. */
 const TABLECLOTHS = [
   {
     id: "T-001",
@@ -190,13 +192,17 @@ const TABLECLOTHS = [
     desc: "A hand-pieced tablecloth from our new collection, stitched patch by patch and finished for everyday meals and festive dinners alike.",
     price: 12500,
     tag: "AVAILABLE",
+    card: "TC01c.JPG",
     photos: ["TC01a.JPG", "TC01b.JPG", "TC01c.JPG"]
-  }
+  },
+  { id: "T-002", name: "Tablecloth 02", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] },
+  { id: "T-003", name: "Tablecloth 03", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] },
+  { id: "T-004", name: "Tablecloth 04", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] }
 ];
 
 TABLECLOTHS.forEach((t) => {
   const images = t.photos.map(file => TABLECLOTH_FOLDER + encodeURI(file));
-  t.image = images[0];
+  t.image = t.card ? TABLECLOTH_FOLDER + encodeURI(t.card) : "";
   t.gallery = images;
 });
 

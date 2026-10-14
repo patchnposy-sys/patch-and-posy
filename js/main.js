@@ -701,24 +701,26 @@ function closeTableclothModal() {
 
 function showTableclothCard() {
   const body = document.getElementById("tablecloth-body");
-  const p = tableclothProducts()[0];
   if (!body) return;
-  if (!p) {
-    body.innerHTML = `<h3 class="bread-title">New collection</h3><p>Coming soon.</p>`;
-    return;
-  }
+  const items = tableclothProducts();
   body.innerHTML = `
     <h3 class="bread-title">New collection · Volume 2</h3>
-    <div class="tablecloth-card">
-      <div class="tablecloth-card-photo">${imgTag(TABLECLOTH_THUMBNAIL, p.name, "fill")}</div>
-      <div class="tablecloth-card-info">
-        <h3>${escapeHTML(p.name)}</h3>
-        <p class="bread-description">${escapeHTML(p.desc)}</p>
-        <p class="price">${formatPKR(p.price)}</p>
-        <button type="button" class="btn-add-bag" id="tablecloth-view">View &amp; order</button>
-      </div>
+    <p class="bread-hint">Choose a tablecloth to see it up close.</p>
+    <div class="tablecloth-grid">
+      ${items.map(p => {
+        const available = p.tag === "AVAILABLE" && p.image;
+        return `
+        <button type="button" class="tablecloth-tile" data-tc-id="${escapeHTML(p.id)}" ${available ? "" : "disabled"}>
+          <span class="tablecloth-tile-photo">${p.image ? imgTag(p.image, p.name, "fill") : `<span class="tablecloth-tile-blank">Coming soon</span>`}</span>
+          <span class="tablecloth-tile-name">${escapeHTML(p.name)}</span>
+          <span class="tablecloth-tile-desc">${escapeHTML(p.desc)}</span>
+        </button>`;
+      }).join("")}
     </div>`;
-  document.getElementById("tablecloth-view").addEventListener("click", () => showTableclothDetail(p.id));
+
+  body.querySelectorAll("[data-tc-id]:not([disabled])").forEach((btn) => {
+    btn.addEventListener("click", () => showTableclothDetail(btn.dataset.tcId));
+  });
 }
 
 function showTableclothDetail(id) {

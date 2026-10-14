@@ -173,58 +173,32 @@ const SPREADS = [
 ];
 
 /* ============================================================
-   TABLECLOTHS — Luxury & Daily Wear
-   Sample placeholders — swap in real photos & details any time.
-   subcategory must be exactly "luxury" or "daily".
-   size (optional) — a short display string, e.g.
-     "4-Seater Square · 54×54 in" or "6-Seater Rectangle · 60×90 in"
+   TABLECLOTHS — new collection (Volume 2)
+   Folder: images/V2-Tablecloths/ (file names must match exactly,
+   including capitals and the extension). Thumbnail is the banner and
+   the card in the popup. TC01a/b/c are the three photos shown when
+   the customer opens the product.
    ============================================================ */
+const TABLECLOTH_FOLDER = "images/V2-Tablecloths/";
+const TABLECLOTH_THUMBNAIL = TABLECLOTH_FOLDER + "Thumbnail.JPG";
+
+/* Price and description are placeholders — set your own. */
 const TABLECLOTHS = [
   {
-    id: "T-L001",
-    name: "T-L001 Heirloom Damask",
-    subcategory: "luxury",
-    size: "4-Seater Square · 54×54 in",
-    desc: "A statement-worthy tablecloth in rich jacquard-style patchwork with a hand-finished scalloped edge — made for festive dinners and guests who notice details.",
+    id: "T-001",
+    name: "Tablecloth 01",
+    desc: "A hand-pieced tablecloth from our new collection, stitched patch by patch and finished for everyday meals and festive dinners alike.",
     price: 12500,
-    tag: "COMING SOON",
-    image: "",
-    swatch: ["#5C3A22", "#E0A83E", "#C0396B"]
-  },
-  {
-    id: "T-L002",
-    name: "T-L002 Royal Ajrak Runner Set",
-    subcategory: "luxury",
-    size: "6-Seater Rectangle · 60×90 in",
-    desc: "Deep indigo Ajrak-inspired patchwork paired with raw silk trim — a tablecloth and matching runner set for special occasions.",
-    price: 15000,
-    tag: "COMING SOON",
-    image: "",
-    swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"]
-  },
-  {
-    id: "T-D001",
-    name: "T-D001 Everyday Gingham",
-    subcategory: "daily",
-    size: "4-Seater Square · 54×54 in",
-    desc: "A durable, easy-wash cotton patchwork cloth in a cheerful gingham mix — built for everyday family meals, not just special occasions.",
-    price: 4500,
-    tag: "COMING SOON",
-    image: "",
-    swatch: ["#8FBF6E", "#F3ECDD", "#E0794F"]
-  },
-  {
-    id: "T-D002",
-    name: "T-D002 Kitchen Table Patch",
-    subcategory: "daily",
-    size: "6-Seater Rectangle · 54×80 in",
-    desc: "A relaxed, low-maintenance patchwork tablecloth in soft pastel scraps — sized for smaller breakfast and kitchen tables.",
-    price: 3800,
-    tag: "COMING SOON",
-    image: "",
-    swatch: ["#E8879C", "#F3ECDD", "#8FBF6E"]
+    tag: "AVAILABLE",
+    photos: ["TC01a.JPG", "TC01b.JPG", "TC01c.JPG"]
   }
 ];
+
+TABLECLOTHS.forEach((t) => {
+  const images = t.photos.map(file => TABLECLOTH_FOLDER + encodeURI(file));
+  t.image = images[0];
+  t.gallery = images;
+});
 
 /* ============================================================
    ACCESSORIES

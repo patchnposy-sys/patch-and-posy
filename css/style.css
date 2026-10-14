@@ -584,3 +584,10 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
   .collection-banner{ aspect-ratio: 4 / 3; }
   .collection-banner-text{ max-width: 80%; }
 }
+
+
+.collection-banner{ cursor: pointer; }
+.tablecloth-card{ display:grid; gap:18px; }
+@media (min-width: 700px){ .tablecloth-card{ grid-template-columns: 1fr 1fr; align-items:start; } }
+.tablecloth-card-photo{ position:relative; aspect-ratio: 1 / 1; overflow:hidden; border-radius:4px; background:#EFE6D2; }
+.tablecloth-card-info h3{ margin: 0 0 8px; }

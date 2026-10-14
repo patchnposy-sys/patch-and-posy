@@ -17,8 +17,8 @@
   <div class="nav">
   
     <nav class="nav-links">
+            <a href="#tablecloths">Tablecloths</a>
       <a href="#spreads">Spreads</a>
-      <a href="#tablecloths">Tablecloths</a>
       <a href="#accessories">Accessories</a>
       <a href="#story">Our Story</a>
       <a href="#newsletter">Journal</a>
@@ -48,6 +48,23 @@
 </section>
 
 
+<section class="section shop shop-alt" id="tablecloths">
+  <div class="wrap">
+    <div class="collection-banner tablecloth-open" role="button" tabindex="0" aria-label="Open Tablecloth 01">
+      <img src="images/V2-Tablecloths/Thumbnail.JPG" data-base="images/V2-Tablecloths/Thumbnail" data-ext-index="0" onerror="retryImage(this)" alt="Tablecloths — new collection">
+      <div class="collection-banner-text">
+        <p class="collection-eyebrow">New collection · Volume 2</p>
+        <h3>Tablecloth 01</h3>
+      </div>
+    </div>
+    <div class="section-head">
+      <h2>Tablecloths</h2>
+      <p>Our new collection. Tap the banner to see Tablecloth 01 up close.</p>
+    </div>
+    <button type="button" class="btn-add-bag tablecloth-open">View Tablecloth 01</button>
+  </div>
+</section>
+
 <section class="section shop" id="spreads">
   <div class="wrap">
     <div class="section-head">
@@ -59,30 +76,7 @@
   </div>
 </section>
 
-<section class="section shop shop-alt" id="tablecloths">
-  <div class="wrap">
-    <div class="collection-banner">
-      <img src="images/V2-Tablecloths/Thumbnail.JPG" data-base="images/V2-Tablecloths/Thumbnail" data-ext-index="0" onerror="retryImage(this)" alt="Tablecloths — new collection">
-      <div class="collection-banner-text">
-        <p class="collection-eyebrow">New collection · Volume 2</p>
-        <h3>Tablecloths</h3>
-      </div>
-    </div>
 
-    <div class="section-head">
-      <h2>Tablecloths</h2>
-      <p>Our Luxury line — made for special occasions.</p>
-    </div>
-
-    <h3 class="subsection-title">Luxury</h3>
-    <div class="patch-grid" id="tablecloths-luxury-grid"></div>
-
-    <!-- Daily Wear is hidden for now.
-    <h3 class="subsection-title">Daily Wear</h3>
-    <div class="patch-grid" id="tablecloths-daily-grid"></div>
-    -->
-  </div>
-</section>
 
 <section class="section volume-story" id="volume-one">
   <div class="wrap">
@@ -188,8 +182,8 @@ From my mother's Singer to my PFAFF, the machines may be different, but the love
     </div>
     <div class="footer-col">
       <h4>Shop</h4>
+            <a href="#tablecloths">Tablecloths</a>
       <a href="#spreads">Patchwork Spreads</a>
-      <a href="#tablecloths">Tablecloths</a>
       <a href="#accessories">Accessories</a>
     </div>
     <div class="footer-col">
@@ -302,6 +296,15 @@ From my mother's Singer to my PFAFF, the machines may be different, but the love
   <div class="modal-inner bread-inner">
     <button type="button" class="drawer-close" id="pot-close" aria-label="Close">✕</button>
     <div id="pot-body"></div>
+  </div>
+</div>
+
+<!-- ============ TABLECLOTHS POPUP (card → photos + order) ============ -->
+<div class="drawer-overlay" id="tablecloth-overlay"></div>
+<div class="modal bread-modal" id="tablecloth-modal" role="dialog" aria-label="Tablecloths">
+  <div class="modal-inner bread-inner">
+    <button type="button" class="drawer-close" id="tablecloth-close" aria-label="Close">✕</button>
+    <div id="tablecloth-body"></div>
   </div>
 </div>
 

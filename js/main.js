@@ -6,9 +6,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   renderGrid("spreads-grid", typeof SPREADS !== "undefined" ? SPREADS : []);
-  renderGrid("tablecloths-luxury-grid", (typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []).filter(p => p.subcategory === "luxury"));
   // Daily Wear is hidden for now.
-  // renderGrid("tablecloths-daily-grid", (typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []).filter(p => p.subcategory === "daily"));
   renderAccessories(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : []);
   renderEventGallery(typeof EVENT_GALLERY !== "undefined" ? EVENT_GALLERY : []);
 
@@ -18,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initBreadModal();
   initPotModal();
   initTeaModal();
+  initTableclothModal();
 
   if (typeof initFirebase === "function") initFirebase();
   if (typeof initEmailJS === "function") initEmailJS();
@@ -656,7 +655,7 @@ function initTeaModal() {
 
 /* ---------- Image loader: tries common file extensions if the given one 404s ----------
    Lets a folder's photos work whether the files are .JPG, .jpg, .jpeg or .png. */
-const IMG_EXT_FALLBACKS = [".JPG", ".jpg", ".jpeg", ".JPEG", ".png", ".PNG"];
+const IMG_EXT_FALLBACKS = [".JPG", ".jpg", ".jpeg", ".JPEG", ".png", ".PNG", ".webp", ".WEBP", ".gif"];
 
 function imgTag(src, alt, mode) {
   const m = String(src).match(/\.[^./]+$/);
@@ -673,4 +672,90 @@ function retryImage(img) {
   if (next >= IMG_EXT_FALLBACKS.length) { img.onerror = null; return; }
   img.dataset.extIndex = String(next);
   img.src = img.dataset.base + IMG_EXT_FALLBACKS[next];
+}
+
+
+/* ---------- Tablecloths (new collection): banner → Tablecloth 01 card → photos + order ---------- */
+function tableclothProducts() {
+  return typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : [];
+}
+
+function openTableclothModal() {
+  const overlay = document.getElementById("tablecloth-overlay");
+  const modal = document.getElementById("tablecloth-modal");
+  if (!overlay || !modal) return;
+  showTableclothCard();
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeTableclothModal() {
+  const overlay = document.getElementById("tablecloth-overlay");
+  const modal = document.getElementById("tablecloth-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  document.body.style.overflow = "";
+}
+
+function showTableclothCard() {
+  const body = document.getElementById("tablecloth-body");
+  const p = tableclothProducts()[0];
+  if (!body) return;
+  if (!p) {
+    body.innerHTML = `<h3 class="bread-title">New collection</h3><p>Coming soon.</p>`;
+    return;
+  }
+  body.innerHTML = `
+    <h3 class="bread-title">New collection · Volume 2</h3>
+    <div class="tablecloth-card">
+      <div class="tablecloth-card-photo">${imgTag(TABLECLOTH_THUMBNAIL, p.name, "fill")}</div>
+      <div class="tablecloth-card-info">
+        <h3>${escapeHTML(p.name)}</h3>
+        <p class="bread-description">${escapeHTML(p.desc)}</p>
+        <p class="price">${formatPKR(p.price)}</p>
+        <button type="button" class="btn-add-bag" id="tablecloth-view">View &amp; order</button>
+      </div>
+    </div>`;
+  document.getElementById("tablecloth-view").addEventListener("click", () => showTableclothDetail(p.id));
+}
+
+function showTableclothDetail(id) {
+  const body = document.getElementById("tablecloth-body");
+  const p = tableclothProducts().find(x => x.id === id);
+  if (!body || !p) return;
+
+  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+
+  body.innerHTML = `
+    <button type="button" class="bread-back" id="tablecloth-back">← Back</button>
+    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
+    <div class="bread-photos">
+      ${photos.map(src => imgTag(src, p.name)).join("")}
+    </div>
+    <p class="price">${formatPKR(p.price)}</p>
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
+      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
+        <button type="button" class="btn-add-bag" data-product-id="${escapeHTML(p.id)}">Add to basket</button>
+        <button type="button" class="btn-whatsapp" data-product-id="${escapeHTML(p.id)}">Order via WhatsApp</button>
+      </div>
+    </div>`;
+
+  document.getElementById("tablecloth-back").addEventListener("click", showTableclothCard);
+  attachAddToBagHandlers();
+  attachWhatsAppHandlers();
+  applyLiveProductStatuses();
+}
+
+function initTableclothModal() {
+  // Delegated: the banner and its button both carry .tablecloth-open.
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".tablecloth-open")) openTableclothModal();
+  });
+  document.getElementById("tablecloth-close")?.addEventListener("click", closeTableclothModal);
+  document.getElementById("tablecloth-overlay")?.addEventListener("click", closeTableclothModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeTableclothModal();
+  });
 }

@@ -265,16 +265,6 @@ const ACCESSORIES = [
     swatch: ["#C0396B", "#8FBF6E", "#F3ECDD"]
   },
   {
-    id: "A-004",
-    name: "A-004 Kitchen Bread Cloth",
-    category: "Bread Cloths",
-    desc: "A simple, good quality sewn cloth. Use it to keep rotis warm off the tawa, or line your bread basket on the dining table.",
-    price: 250,
-    tag: "COMING SOON",
-    image: "",
-    swatch: ["#E0A83E", "#F3ECDD", "#8A6B4D"]
-  },
-  {
     id: "A-005",
     name: "A-005 Cosy Tea Cozy",
     category: "Tea Cozies",
@@ -316,6 +306,33 @@ const ACCESSORIES = [
   }
 ];
 
+/* Bread cloths — one entry per photo in images/V2-Bread Cloths/ */
+const BREAD_CLOTHS = [
+  { colour: "Blue 1",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"] },
+  { colour: "Blue 2",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"] },
+  { colour: "Grey 1",  swatch: ["#8A8F99", "#D9DCE1", "#F3ECDD"] },
+  { colour: "Grey 2",  swatch: ["#8A8F99", "#D9DCE1", "#F3ECDD"] },
+  { colour: "Mix",     swatch: ["#E0A83E", "#8FBF6E", "#C0396B"] },
+  { colour: "Red 1",   swatch: ["#C0396B", "#E8879C", "#F3ECDD"] },
+  { colour: "Red 2",   swatch: ["#C0396B", "#E8879C", "#F3ECDD"] },
+  { colour: "White 1", swatch: ["#F3ECDD", "#FBF7EE", "#C0396B"] },
+  { colour: "White 2", swatch: ["#F3ECDD", "#FBF7EE", "#C0396B"] }
+];
+
+BREAD_CLOTHS.forEach((b, i) => {
+  const id = "A-" + String(9 + i).padStart(3, "0");
+  ACCESSORIES.push({
+    id: id,
+    name: id + " Bread Cloth — " + b.colour,
+    category: "Bread Cloths",
+    desc: "A simple, good quality sewn cloth. Use it to keep rotis warm off the tawa, or line your bread basket on the dining table.",
+    price: 250,
+    tag: "COMING SOON",
+    image: "images/V2-Bread%20Cloths/" + encodeURIComponent(b.colour) + ".jpg",
+    swatch: b.swatch
+  });
+});
+
 /* ============================================================
    VOLUME 1 EVENT GALLERY — HabittCity Popup, August 2026
    Add your event photos here. Save the actual photo files into
@@ -336,7 +353,14 @@ const EVENT_GALLERY = [
   }
 ];
 
+
+
 /* Kept for backward compatibility with any code that still expects a
    single flat product list (spreads only). New code should use SPREADS,
    TABLECLOTHS and ACCESSORIES directly. */
 const PRODUCTS = SPREADS;
+
+/* Spread photos now live in images/V1-Bed Spreads/ (same file names) */
+SPREADS.forEach(p => {
+  p.image = "images/V1-Bed%20Spreads/" + p.image.split("/").pop();
+});

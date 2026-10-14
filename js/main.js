@@ -565,7 +565,7 @@ function teaProducts() {
 function teaThumbnailHTML() {
   return `
     <div class="patch tea-thumb">
-      <div class="patch-photo" style="background-image:url('${escapeHTML(TEA_COZY_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+      <div class="patch-photo">${imgTag(TEA_COZY_THUMBNAIL, "Tea cozies", "fill")}</div>
       <div class="patch-info">
         <h3>Tea Cozies</h3>
         <p class="desc">Two designs. Tap to see them and add to basket.</p>
@@ -604,7 +604,7 @@ function showTeaDesigns() {
     <div class="bread-colour-grid">
       ${teaProducts().map(p => `
         <button type="button" class="bread-colour" data-tea-id="${escapeHTML(p.id)}">
-          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          ${imgTag(p.image, p.name)}
           <span>${escapeHTML(p.name.replace("Tea Cozy — ", ""))}</span>
         </button>`).join("")}
     </div>`;
@@ -625,7 +625,7 @@ function showTeaDetail(id) {
     <button type="button" class="bread-back" id="tea-back">← All designs</button>
     <h3 class="bread-title">${escapeHTML(p.name)}</h3>
     <div class="bread-photos">
-      ${photos.map(src => `<img src="${escapeHTML(src)}" alt="${escapeHTML(p.name)}" loading="lazy">`).join("")}
+      ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price">${formatPKR(p.price)}</p>
     <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
@@ -651,4 +651,26 @@ function initTeaModal() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeTeaModal();
   });
+}
+
+
+/* ---------- Image loader: tries common file extensions if the given one 404s ----------
+   Lets a folder's photos work whether the files are .JPG, .jpg, .jpeg or .png. */
+const IMG_EXT_FALLBACKS = [".JPG", ".jpg", ".jpeg", ".JPEG", ".png", ".PNG"];
+
+function imgTag(src, alt, mode) {
+  const m = String(src).match(/\.[^./]+$/);
+  const base = m ? src.slice(0, -m[0].length) : src;
+  const first = m ? m[0] : IMG_EXT_FALLBACKS[0];
+  const style = mode === "fill"
+    ? ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"'
+    : "";
+  return `<img src="${escapeHTML(base + first)}" alt="${escapeHTML(alt || "")}" data-base="${escapeHTML(base)}" data-ext-index="0" loading="lazy" onerror="retryImage(this)"${style}>`;
+}
+
+function retryImage(img) {
+  const next = Number(img.dataset.extIndex) + 1;
+  if (next >= IMG_EXT_FALLBACKS.length) { img.onerror = null; return; }
+  img.dataset.extIndex = String(next);
+  img.src = img.dataset.base + IMG_EXT_FALLBACKS[next];
 }

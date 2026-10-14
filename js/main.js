@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initPotModal();
   initTeaModal();
   initTableclothModal();
+  initTableclothBanner();
 
   if (typeof initFirebase === "function") initFirebase();
   if (typeof initEmailJS === "function") initEmailJS();
@@ -759,5 +760,14 @@ function initTableclothModal() {
   document.getElementById("tablecloth-overlay")?.addEventListener("click", closeTableclothModal);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeTableclothModal();
+  });
+}
+
+
+/* Banner photo is added by the script (not static HTML) so the extension fallback always works. */
+function initTableclothBanner() {
+  document.querySelectorAll(".collection-banner").forEach((banner) => {
+    if (banner.querySelector("img")) return;
+    banner.insertAdjacentHTML("afterbegin", imgTag(TABLECLOTH_THUMBNAIL, "Tablecloths — new collection", "fill"));
   });
 }

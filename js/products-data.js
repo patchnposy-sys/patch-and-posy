@@ -430,6 +430,40 @@ const EVENT_GALLERY = [
 /* Kept for backward compatibility with any code that still expects a
    single flat product list (spreads only). New code should use SPREADS,
    TABLECLOTHS and ACCESSORIES directly. */
+/* ============================================================
+   KIDS DASTERKHWAN — new collection (Volume 2)
+   Folder: images/V2-KidsDasterkhwan/ (file names must match exactly,
+   including capitals and the extension). Each design has three photos
+   (A, B, C) shown inside the popup. Each design's tile uses its B photo
+   (D1B, D2B, D3B). The large card picture is Thumbnail.JPG in the same folder.
+   Name, price and description are placeholders — set your own.
+   ============================================================ */
+const KIDS_DASTERKHWAN_FOLDER = "images/V2-KidsDasterkhwan/";
+const KIDS_DASTERKHWAN_THUMBNAIL = KIDS_DASTERKHWAN_FOLDER + "Thumbnail.JPG";
+const KIDS_DASTERKHWANS = [
+  { id: "KD-001", name: "Kids Dasterkhwan — Design 1", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D1B.JPG", photos: ["D1A.JPG", "D1B.JPG", "D1C.JPG"] },
+  { id: "KD-002", name: "Kids Dasterkhwan — Design 2", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D2B.JPG", photos: ["D2A.JPG", "D2B.JPG", "D2C.JPG"] },
+  { id: "KD-003", name: "Kids Dasterkhwan — Design 3", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D3B.JPG", photos: ["D3A.JPG", "D3B.JPG", "D3C.JPG"] }
+];
+
+KIDS_DASTERKHWANS.forEach((k) => {
+  k.image = KIDS_DASTERKHWAN_FOLDER + encodeURI(k.thumbnail);
+  k.gallery = k.photos.map(file => KIDS_DASTERKHWAN_FOLDER + encodeURI(file));
+  ACCESSORIES.push({
+    id: k.id,
+    name: k.name,
+    category: "Kids Dasterkhwan",
+    desc: k.desc,
+    price: k.price,
+    tag: k.tag,
+    image: k.image,
+    gallery: k.gallery
+  });
+});
+
+/* Kept for backward compatibility with any code that still expects a
+   single flat product list (spreads only). New code should use SPREADS,
+   TABLECLOTHS and ACCESSORIES directly. */
 const PRODUCTS = SPREADS;
 
 /* Spread photos live in images/V1-BedSpreads/ (same file names).

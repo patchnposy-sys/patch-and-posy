@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTeaModal();
   initTableclothModal();
   initTableclothBanner();
+  initKidsModal();
 
   if (typeof initFirebase === "function") initFirebase();
   if (typeof initEmailJS === "function") initEmailJS();
@@ -80,7 +81,7 @@ function renderAccessories(products) {
   const contentEl = document.getElementById("accessories-content");
   if (!filtersEl || !contentEl) return;
 
-  const ACCESSORY_ORDER = ["Tea Cozies", "Pot Holders", "Bread Cloths"];
+  const ACCESSORY_ORDER = ["Tea Cozies", "Pot Holders", "Bread Cloths", "Kids Dasterkhwan"];
   const rank = (c) => { const i = ACCESSORY_ORDER.indexOf(c); return i === -1 ? 99 : i; };
   const categories = [...new Set(products.map(p => p.category || "Other"))]
     .sort((a, b) => rank(a) - rank(b));
@@ -98,6 +99,7 @@ function renderAccessories(products) {
       if (cat === "Tea Cozies") return teaThumbnailHTML();
       if (cat === "Pot Holders") return potThumbnailHTML();
       if (cat === "Bread Cloths") return breadThumbnailHTML();
+      if (cat === "Kids Dasterkhwan") return kidsThumbnailHTML();
       const items = products.filter(p => (p.category || "Other") === cat);
       return items.map(productCardHTML).join("");
     }).join("");
@@ -769,5 +771,105 @@ function initTableclothBanner() {
   document.querySelectorAll(".collection-banner").forEach((banner) => {
     if (banner.querySelector("img")) return;
     banner.insertAdjacentHTML("afterbegin", imgTag(TABLECLOTH_THUMBNAIL, "Tablecloths — new collection", "fill"));
+  });
+}
+
+
+/* ---------- Kids Dasterkhwan: collage thumbnail → design list → photos + buy buttons ---------- */
+function kidsProducts() {
+  return (typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
+    .filter(p => p.category === "Kids Dasterkhwan");
+}
+
+function kidsThumbnailHTML() {
+  return `
+    <div class="patch kd-thumb">
+      <div class="patch-photo">${imgTag(KIDS_DASTERKHWAN_THUMBNAIL, "Kids Dasterkhwan", "fill")}</div>
+      <div class="patch-info">
+        <h3>Kids Dasterkhwan</h3>
+        <p class="desc">Three designs. Tap to see them and add to basket.</p>
+        <button type="button" class="btn-add-bag kd-open">View designs</button>
+      </div>
+    </div>`;
+}
+
+function openKidsModal() {
+  const overlay = document.getElementById("kd-overlay");
+  const modal = document.getElementById("kd-modal");
+  if (!overlay || !modal) return;
+  showKidsDesigns();
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeKidsModal() {
+  const overlay = document.getElementById("kd-overlay");
+  const modal = document.getElementById("kd-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function showKidsDesigns() {
+  const body = document.getElementById("kd-body");
+  if (!body) return;
+
+  body.innerHTML = `
+    <h3 class="bread-title">Kids Dasterkhwan</h3>
+    <p class="bread-hint">Choose a design to see all of its photos.</p>
+    <div class="bread-colour-grid">
+      ${kidsProducts().map(p => `
+        <button type="button" class="bread-colour" data-kd-id="${escapeHTML(p.id)}">
+          ${imgTag(p.image, p.name)}
+          <span>${escapeHTML(p.name.replace("Kids Dasterkhwan — ", ""))}</span>
+        </button>`).join("")}
+    </div>`;
+
+  body.querySelectorAll("[data-kd-id]").forEach((btn) => {
+    btn.addEventListener("click", () => showKidsDetail(btn.dataset.kdId));
+  });
+}
+
+function showKidsDetail(id) {
+  const body = document.getElementById("kd-body");
+  const p = kidsProducts().find(x => x.id === id);
+  if (!body || !p) return;
+
+  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+
+  body.innerHTML = `
+    <button type="button" class="bread-back" id="kd-back">← All designs</button>
+    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
+    <div class="bread-photos">
+      ${photos.map(src => imgTag(src, p.name)).join("")}
+    </div>
+    <p class="bread-description">${escapeHTML(p.desc)}</p>
+    <p class="price">${formatPKR(p.price)}</p>
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
+      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
+        <button type="button" class="btn-add-bag" data-product-id="${escapeHTML(p.id)}">Add to basket</button>
+        <button type="button" class="btn-whatsapp" data-product-id="${escapeHTML(p.id)}">Order via WhatsApp</button>
+      </div>
+    </div>`;
+
+  document.getElementById("kd-back").addEventListener("click", showKidsDesigns);
+  attachAddToBagHandlers();
+  attachWhatsAppHandlers();
+  applyLiveProductStatuses();
+}
+
+function initKidsModal() {
+  // Delegated, so it keeps working when the accessories grid re-renders on filter change.
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".kd-open, .kd-thumb")) openKidsModal();
+  });
+  document.getElementById("kd-close")?.addEventListener("click", closeKidsModal);
+  document.getElementById("kd-overlay")?.addEventListener("click", closeKidsModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeKidsModal();
   });
 }

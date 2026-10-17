@@ -375,6 +375,28 @@ function renderProductsTable() {
   });
 }
 
+/* Reads the live AVAILABLE / SOLD overrides from Firestore, then draws the table */
+async function loadProductStatuses() {
+  const fb = initFirebase();
+  const tbody = document.getElementById("products-table-body");
+  if (fb && fb.db) {
+    try {
+      const snapshot = await fb.db.collection("productStatus").get();
+      liveProductStatuses = {};
+      snapshot.docs.forEach((doc) => {
+        const status = doc.data().status;
+        if (status) liveProductStatuses[doc.id] = String(status).toUpperCase();
+      });
+    } catch (err) {
+      console.error("Failed to load product statuses:", err);
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">Couldn't load live statuses. Showing default statuses from the code. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
+      }
+    }
+  }
+  renderProductsTable();
+}
+
 async function updateProductStatus(productId, status) {
   const fb = initFirebase();
   if (!fb || !fb.db) return;

@@ -616,3 +616,58 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
 }
 #tablecloths:target{ animation: tc-flash 2.8s ease-out 1; }
 #tablecloths:target .collection-banner{ box-shadow: 0 0 0 4px #D6336C; }
+
+/* ---------- Tablecloths v2: style cards → designs → design detail ---------- */
+.tc-style-grid{ display:grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 700px){ .tc-style-grid{ grid-template-columns: repeat(3, 1fr); } }
+.tc-style-card{
+  display:flex; flex-direction:column; gap:8px; text-align:left;
+  background:none; border:0; padding:0; cursor:pointer; color:inherit; font:inherit;
+}
+.tc-style-photo{ position:relative; display:block; aspect-ratio: 4 / 3; overflow:hidden; border-radius:6px; background:#EFE6D2; }
+.tc-style-name{ font-weight:600; font-size:1.05rem; }
+.tc-style-desc{ font-size:.9rem; color:#8A6B4D; line-height:1.5; }
+.tc-style-meta{ font-size:.85rem; font-weight:600; }
+.tc-tile-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.tc-tile-price{ font-weight:600; }
+.tc-tag{
+  font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+  padding:3px 8px; border-radius:999px; background:#E8E0CC; color:#8A6B4D;
+}
+.tc-tag-available{ background: var(--teal); color: var(--paper); }
+.tc-detail{ margin-top:18px; display:grid; gap:16px; }
+.tc-section h4{ font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; color:#8A6B4D; margin-bottom:6px; }
+.tc-section p{ line-height:1.6; }
+.tc-price-row{ display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.tc-price-row h4{ width:100%; margin:0; }
+.tc-price{ font-size:1.3rem; font-weight:600; }
+.tc-dims{ list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+.tc-dims li{ display:flex; justify-content:space-between; gap:12px; border-bottom:1px dashed #D9CBB0; padding:6px 0; }
+
+/* ---------- Layout fixes: show whole photos, section labels, Patchwork Spreads popup ---------- */
+.section-eyebrow{ font-size:.75rem; letter-spacing:.14em; text-transform:uppercase; color:#8A6B4D; margin-bottom:12px; }
+.tablecloth-tile-photo img,
+.tc-style-photo img,
+.spread-photo img{ object-fit: contain !important; background: #EFE6D2; }
+.bread-photos img{ aspect-ratio: auto !important; height: auto; max-height: 70vh; object-fit: contain !important; background: #EFE6D2; }
+.tc-zoom{ cursor: zoom-in; }
+.spread-grid{ display:grid; grid-template-columns: 1fr; gap: 18px; }
+@media (min-width: 700px){ .spread-grid{ grid-template-columns: repeat(3, 1fr); } }
+.spread-photo{ position:relative; aspect-ratio: 4 / 5; overflow:hidden; border-radius:6px; background:#EFE6D2; display:flex; align-items:center; justify-content:center; }
+.spread-info h3{ font-size:1rem; font-weight:600; margin-top:8px; }
+.spread-info .desc{ font-size:.88rem; color:#8A6B4D; line-height:1.5; margin-top:4px; }
+.spread-info .price{ font-weight:600; margin-top:6px; }
+.spread-info .tc-tag{ display:inline-block; margin-top:6px; }
+
+/* ---------- Lightbox sits above the product popups and shows the whole photo ---------- */
+#lightbox-overlay{ z-index: 110; }
+#lightbox-modal{ z-index: 111; }
+.lightbox-inner img{
+  width: auto !important; max-width: 100%; max-height: 80vh;
+  height: auto; margin: 0 auto; display: block; object-fit: contain;
+}
+/* Close button sits inside the photo box so it is not clipped and can be tapped */
+.lightbox-inner .drawer-close{
+  top: 8px; right: 8px; width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); color: #FBF7EE; font-size: 1.1rem; line-height: 36px; text-align: center;
+}

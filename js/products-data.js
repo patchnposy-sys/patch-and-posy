@@ -103,7 +103,7 @@ const SPREADS = [
     name: "S-0008 Cotton Candy",
     desc: "A playful mix of soft pink, cheerful marigold yellow and pale sky blue, arranged in a vibrant checkerboard rhythm. Sweet, nostalgic and full of colour, this cheerful patchwork brings a little candy-like joy to any room.",
     price: 8000,
-    tag: "AVAILABLE",
+    tag: "SOLD",
     image: "images/20260809_100948.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
@@ -173,37 +173,78 @@ const SPREADS = [
 ];
 
 /* ============================================================
-   TABLECLOTHS — new collection (Volume 2)
-   Folder: images/V2-Tablecloths/ (file names must match exactly,
-   including capitals and the extension). Thumbnail is the banner and
-   the card in the popup. TC01a/b/c are the three photos shown when
-   the customer opens the product.
+   TABLECLOTHS — Volume 2 photos live in images/V2-Tablecloths/
+   (style sub-folders; file names must match exactly, including
+   capitals and the extension — the server is case-sensitive).
    ============================================================ */
 const TABLECLOTH_FOLDER = "images/V2-Tablecloths/";
 const TABLECLOTH_THUMBNAIL = TABLECLOTH_FOLDER + "Thumbnail.JPG";
 
-/* Tablecloth 01 is the real product: card photo = TC01c, detail = all three photos.
-   02–04 are placeholders for upcoming designs (no photos, "COMING SOON").
-   Price and description are placeholders — set your own. */
-const TABLECLOTHS = [
+/* ============================================================
+   TABLECLOTH STYLES (Volume 2) — three style categories.
+   Order here is the order shown: Patchwork, Lacework, Dailywares.
+   folder    - sub-folder inside TABLECLOTH_FOLDER (spaces allowed)
+   thumbnail - category card image inside TABLECLOTH_FOLDER
+   price     - default price (PKR) for every design in the style
+   codes     - design codes; each design has photos <code>a.jpg,
+               <code>b.jpg, <code>c.jpg inside the style folder.
+               The c photo is the design's card thumbnail.
+   All description text below is DUMMY placeholder text.
+   ============================================================ */
+const TABLECLOTH_STYLES = [
   {
-    id: "T-001",
-    name: "Tablecloth 01",
-    desc: "A hand-pieced tablecloth from our new collection, stitched patch by patch and finished for everyday meals and festive dinners alike.",
-    price: 12500,
-    tag: "AVAILABLE",
-    card: "TC01c.JPG",
-    photos: ["TC01a.JPG", "TC01b.JPG", "TC01c.JPG"]
+    id: "patchwork",
+    name: "Patchwork",
+    folder: "Patchwork Style",
+    thumbnail: "Patchwork-thumbnail.jpg",
+    price: 5500,
+    description: "DUMMY: Patchwork tablecloths are pieced from many prints and colours in classic block patterns, stitched by hand.",
+    codes: ["TC03", "TC011", "TC012"]
   },
-  { id: "T-002", name: "Tablecloth 02", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] },
-  { id: "T-003", name: "Tablecloth 03", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] },
-  { id: "T-004", name: "Tablecloth 04", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] }
+  {
+    id: "lacework",
+    name: "Lacework",
+    folder: "Lacework",
+    thumbnail: "Lacework-thumbnail.jpg",
+    price: 4500,
+    description: "DUMMY: Lacework tablecloths are finished with soft lace edging and printed or plain fabrics for a delicate table.",
+    codes: ["TC02", "TC04", "TC05", "TC07", "TC09", "TC013", "TC014"]
+  },
+  {
+    id: "dailywares",
+    name: "Dailywares",
+    folder: "Dailywares",
+    thumbnail: "Dailywares-thumbnail.jpg",
+    price: 3500,
+    description: "DUMMY: Dailywares tablecloths are practical everyday pieces in gingham and simple prints, easy to wash and use.",
+    codes: ["TC01", "TC06", "TC08", "TC010"]
+  }
 ];
 
-TABLECLOTHS.forEach((t) => {
-  const images = t.photos.map(file => TABLECLOTH_FOLDER + encodeURI(file));
-  t.image = t.card ? TABLECLOTH_FOLDER + encodeURI(t.card) : "";
-  t.gallery = images;
+/* Builds one entry per design code. Each design can still be changed
+   by hand: set its own price, tag ("AVAILABLE" / "SOLD" / other),
+   description, dimensions or care text in this array after it is built. */
+const TABLECLOTH_DESIGNS = [];
+TABLECLOTH_STYLES.forEach((style) => {
+  style.codes.forEach((code) => {
+    const photos = ["a", "b", "c"].map(s => TABLECLOTH_FOLDER + encodeURI(style.folder + "/" + code + s + ".jpg"));
+    TABLECLOTH_DESIGNS.push({
+      id: "DS-" + code,
+      code: code,
+      name: style.name + " — " + code,
+      style: style.id,
+      price: style.price,
+      tag: "AVAILABLE",
+      description: "DUMMY: A hand-pieced design from our Volume 2 tablecloth collection, stitched patch by patch for everyday meals and festive dinners.",
+      dimensions: [
+        { size: "4-seater square", measure: "DUMMY 60 × 60 in" },
+        { size: "6-seater rectangle", measure: "DUMMY 60 × 108 in" }
+      ],
+      careInstructions: "DUMMY: Hand wash in cold water with mild soap. Dry in shade and iron on low heat.",
+      photos: photos,
+      card: photos[2]
+    });
+  });
 });
 
 /* ============================================================

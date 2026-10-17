@@ -5,7 +5,7 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-  renderGrid("spreads-grid", typeof SPREADS !== "undefined" ? SPREADS : []);
+  // Spreads now live in the Patchwork Spreads popup (see initSpreadsModal).
   // Daily Wear is hidden for now.
   renderAccessories(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : []);
   renderEventGallery(typeof EVENT_GALLERY !== "undefined" ? EVENT_GALLERY : []);
@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTeaModal();
   initTableclothModal();
   initTableclothBanner();
+  initSpreadsModal();
   initKidsModal();
 
   if (typeof initFirebase === "function") initFirebase();
@@ -277,7 +278,7 @@ function initBreadModal() {
 function getAllProducts() {
   return [
     ...(typeof SPREADS !== "undefined" ? SPREADS : []),
-    ...(typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []),
+    ...(typeof TABLECLOTH_DESIGNS !== "undefined" ? TABLECLOTH_DESIGNS : []),
     ...(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
   ];
 }
@@ -661,9 +662,11 @@ function initTeaModal() {
 const IMG_EXT_FALLBACKS = [".JPG", ".jpg", ".jpeg", ".JPEG", ".png", ".PNG", ".webp", ".WEBP", ".gif"];
 
 function imgTag(src, alt, mode) {
+  // Always start with IMG_EXT_FALLBACKS[0] (".JPG") and strip any extension written in the data,
+  // so uppercase .JPG files load and the retry list is tried in order from the start.
   const m = String(src).match(/\.[^./]+$/);
   const base = m ? src.slice(0, -m[0].length) : src;
-  const first = m ? m[0] : IMG_EXT_FALLBACKS[0];
+  const first = IMG_EXT_FALLBACKS[0];
   const style = mode === "fill"
     ? ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"'
     : "";
@@ -678,16 +681,28 @@ function retryImage(img) {
 }
 
 
-/* ---------- Tablecloths (new collection): banner → Tablecloth 01 card → photos + order ---------- */
-function tableclothProducts() {
-  return typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : [];
+/* ---------- Tablecloths (Volume 2): banner → 3 styles → designs → design detail ---------- */
+function tableclothStyles() {
+  return typeof TABLECLOTH_STYLES !== "undefined" ? TABLECLOTH_STYLES : [];
+}
+
+function tableclothDesignsAll() {
+  return typeof TABLECLOTH_DESIGNS !== "undefined" ? TABLECLOTH_DESIGNS : [];
+}
+
+function tableclothDesigns(styleId) {
+  return tableclothDesignsAll().filter(d => d.style === styleId);
+}
+
+function isTableclothAvailable(d) {
+  return (d.tag || "").toUpperCase() === "AVAILABLE";
 }
 
 function openTableclothModal() {
   const overlay = document.getElementById("tablecloth-overlay");
   const modal = document.getElementById("tablecloth-modal");
   if (!overlay || !modal) return;
-  showTableclothCard();
+  showTableclothStyles();
   overlay.classList.add("is-open");
   modal.classList.add("is-open");
   document.body.style.overflow = "hidden";
@@ -702,52 +717,104 @@ function closeTableclothModal() {
   document.body.style.overflow = "";
 }
 
-function showTableclothCard() {
+/* Step 1: the three style cards (Patchwork, Lacework, Dailywares) */
+function showTableclothStyles() {
   const body = document.getElementById("tablecloth-body");
   if (!body) return;
-  const items = tableclothProducts();
   body.innerHTML = `
-    <h3 class="bread-title">New collection · Volume 2</h3>
-    <p class="bread-hint">Choose a tablecloth to see it up close.</p>
-    <div class="tablecloth-grid">
-      ${items.map(p => {
-        const available = p.tag === "AVAILABLE" && p.image;
-        return `
-        <button type="button" class="tablecloth-tile" data-tc-id="${escapeHTML(p.id)}" ${available ? "" : "disabled"}>
-          <span class="tablecloth-tile-photo">${p.image ? imgTag(p.image, p.name, "fill") : `<span class="tablecloth-tile-blank">Coming soon</span>`}</span>
-          <span class="tablecloth-tile-name">${escapeHTML(p.name)}</span>
-          <span class="tablecloth-tile-desc">${escapeHTML(p.desc)}</span>
-        </button>`;
-      }).join("")}
+    <h3 class="bread-title">Tablecloths · Volume 2</h3>
+    <p class="bread-hint">Choose a style to see its designs.</p>
+    <div class="tc-style-grid">
+      ${tableclothStyles().map(s => `
+        <button type="button" class="tc-style-card" data-tc-style="${escapeHTML(s.id)}">
+          <span class="tc-style-photo">${imgTag(TABLECLOTH_FOLDER + encodeURI(s.thumbnail), s.name, "fill")}</span>
+          <span class="tc-style-name">${escapeHTML(s.name)}</span>
+          <span class="tc-style-desc">${escapeHTML(s.description)}</span>
+          <span class="tc-style-meta">${tableclothDesigns(s.id).length} designs · from ${formatPKR(s.price)}</span>
+        </button>`).join("")}
     </div>`;
 
-  body.querySelectorAll("[data-tc-id]:not([disabled])").forEach((btn) => {
+  body.querySelectorAll("[data-tc-style]").forEach((btn) => {
+    btn.addEventListener("click", () => showTableclothDesigns(btn.dataset.tcStyle));
+  });
+}
+
+/* Step 2: the designs in one style, each with its c photo, price and availability */
+function showTableclothDesigns(styleId) {
+  const body = document.getElementById("tablecloth-body");
+  const style = tableclothStyles().find(s => s.id === styleId);
+  if (!body || !style) return;
+
+  body.innerHTML = `
+    <button type="button" class="bread-back" id="tc-back-styles">← All styles</button>
+    <h3 class="bread-title">${escapeHTML(style.name)}</h3>
+    <p class="bread-hint">${escapeHTML(style.description)}</p>
+    <div class="tablecloth-grid">
+      ${tableclothDesigns(styleId).map(d => `
+        <button type="button" class="tablecloth-tile" data-tc-id="${escapeHTML(d.id)}">
+          <span class="tablecloth-tile-photo">${imgTag(d.card, d.name, "fill")}</span>
+          <span class="tablecloth-tile-name">${escapeHTML(d.name)}</span>
+          <span class="tc-tile-row">
+            <span class="tc-tile-price">${formatPKR(d.price)}</span>
+            <span class="tc-tag${isTableclothAvailable(d) ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(d.id)}">${escapeHTML(d.tag)}</span>
+          </span>
+        </button>`).join("")}
+    </div>`;
+
+  document.getElementById("tc-back-styles").addEventListener("click", showTableclothStyles);
+  body.querySelectorAll("[data-tc-id]").forEach((btn) => {
     btn.addEventListener("click", () => showTableclothDetail(btn.dataset.tcId));
   });
 }
 
+/* Step 3: one design — all three photos, then description, price, dimensions, care, and the buy buttons */
 function showTableclothDetail(id) {
   const body = document.getElementById("tablecloth-body");
-  const p = tableclothProducts().find(x => x.id === id);
-  if (!body || !p) return;
+  const d = tableclothDesignsAll().find(x => x.id === id);
+  if (!body || !d) return;
+  const style = tableclothStyles().find(s => s.id === d.style);
+  const available = isTableclothAvailable(d);
 
-  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+  const dimsHTML = (d.dimensions || []).map(x => `
+    <li><span>${escapeHTML(x.size)}</span><span>${escapeHTML(x.measure)}</span></li>`).join("");
+
+  const buyHTML = available
+    ? `<div class="bread-buy" data-product-id="${escapeHTML(d.id)}">
+         <div class="patch-actions" data-actions-for="${escapeHTML(d.id)}">
+           <button type="button" class="btn-add-bag" data-product-id="${escapeHTML(d.id)}">Add to basket</button>
+           <button type="button" class="btn-whatsapp" data-product-id="${escapeHTML(d.id)}">Order via WhatsApp</button>
+         </div>
+       </div>`
+    : `<span class="btn-add-bag btn-add-bag-disabled">Not available yet</span>`;
 
   body.innerHTML = `
-    <button type="button" class="bread-back" id="tablecloth-back">← Back</button>
-    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
-    <div class="bread-photos">
-      ${photos.map(src => imgTag(src, p.name)).join("")}
+    <button type="button" class="bread-back" id="tc-back-designs">← Back to ${escapeHTML(style ? style.name : "designs")}</button>
+    <h3 class="bread-title">${escapeHTML(d.name)}</h3>
+    <div class="bread-photos tc-zoom">
+      ${d.photos.map(src => imgTag(src, d.name)).join("")}
     </div>
-    <p class="price">${formatPKR(p.price)}</p>
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
-      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
-        <button type="button" class="btn-add-bag" data-product-id="${escapeHTML(p.id)}">Add to basket</button>
-        <button type="button" class="btn-whatsapp" data-product-id="${escapeHTML(p.id)}">Order via WhatsApp</button>
-      </div>
-    </div>`;
+    <div class="tc-detail">
+      <section class="tc-section">
+        <h4>Description</h4>
+        <p>${escapeHTML(d.description)}</p>
+      </section>
+      <section class="tc-section tc-price-row">
+        <h4>Price</h4>
+        <p class="tc-price">${formatPKR(d.price)}</p>
+        <span class="tc-tag${available ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(d.id)}">${escapeHTML(d.tag)}</span>
+      </section>
+      <section class="tc-section">
+        <h4>Dimensions</h4>
+        <ul class="tc-dims">${dimsHTML}</ul>
+      </section>
+      <section class="tc-section">
+        <h4>Care Instructions</h4>
+        <p>${escapeHTML(d.careInstructions)}</p>
+      </section>
+    </div>
+    ${buyHTML}`;
 
-  document.getElementById("tablecloth-back").addEventListener("click", showTableclothCard);
+  document.getElementById("tc-back-designs").addEventListener("click", () => showTableclothDesigns(d.style));
   attachAddToBagHandlers();
   attachWhatsAppHandlers();
   applyLiveProductStatuses();
@@ -758,6 +825,11 @@ function initTableclothModal() {
   document.addEventListener("click", (e) => {
     if (e.target.closest(".tablecloth-open")) openTableclothModal();
   });
+  // Photos open full size in the lightbox when clicked.
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest(".tc-zoom img");
+    if (img) openLightbox(img.currentSrc || img.src, img.alt);
+  });
   document.getElementById("tablecloth-close")?.addEventListener("click", closeTableclothModal);
   document.getElementById("tablecloth-overlay")?.addEventListener("click", closeTableclothModal);
   document.addEventListener("keydown", (e) => {
@@ -766,11 +838,68 @@ function initTableclothModal() {
 }
 
 
-/* Banner photo is added by the script (not static HTML) so the extension fallback always works. */
+/* Banner photo is added by the script (not static HTML) so the extension fallback always works.
+   A banner can set its own photo with data-banner; otherwise it uses the tablecloth thumbnail. */
 function initTableclothBanner() {
   document.querySelectorAll(".collection-banner").forEach((banner) => {
     if (banner.querySelector("img")) return;
-    banner.insertAdjacentHTML("afterbegin", imgTag(TABLECLOTH_THUMBNAIL, "Tablecloths — new collection", "fill"));
+    const src = banner.dataset.banner || TABLECLOTH_THUMBNAIL;
+    banner.insertAdjacentHTML("afterbegin", imgTag(src, banner.getAttribute("aria-label") || "", "fill"));
+  });
+}
+
+/* ---------- Patchwork Spreads (Volume 1, all sold): thumbnail → popup with every spread, photo full size ---------- */
+function openSpreadsModal() {
+  const overlay = document.getElementById("spreads-overlay");
+  const modal = document.getElementById("spreads-modal");
+  if (!overlay || !modal) return;
+  showSpreads();
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSpreadsModal() {
+  const overlay = document.getElementById("spreads-overlay");
+  const modal = document.getElementById("spreads-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  document.body.style.overflow = "";
+}
+
+function spreadCardHTML(p) {
+  return `
+    <div class="spread-card">
+      <div class="spread-photo tc-zoom">${imgTag(p.image, p.name, "fill")}</div>
+      <div class="spread-info">
+        <h3>${escapeHTML(p.name)}</h3>
+        <p class="desc">${escapeHTML(p.desc)}</p>
+        <p class="price">${formatPKR(p.price)}</p>
+        <span class="tc-tag" data-tag-for="${escapeHTML(p.id)}">${escapeHTML(p.tag)}</span>
+      </div>
+    </div>`;
+}
+
+function showSpreads() {
+  const body = document.getElementById("spreads-body");
+  if (!body) return;
+  const items = typeof SPREADS !== "undefined" ? SPREADS : [];
+  body.innerHTML = `
+    <h3 class="bread-title">Patchwork Spreads · Volume 1</h3>
+    <p class="bread-hint">All fifteen spreads are sold. Tap a photo to see it full size.</p>
+    <div class="spread-grid">${items.map(spreadCardHTML).join("")}</div>`;
+  applyLiveProductStatuses();
+}
+
+function initSpreadsModal() {
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".spreads-open")) openSpreadsModal();
+  });
+  document.getElementById("spreads-close")?.addEventListener("click", closeSpreadsModal);
+  document.getElementById("spreads-overlay")?.addEventListener("click", closeSpreadsModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSpreadsModal();
   });
 }
 

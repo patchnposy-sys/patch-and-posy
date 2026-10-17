@@ -1,3 +1,5 @@
+[hidden]{ display: none !important; }
+
 /* =========================================================
    PATCH & POSY — Dashboard stylesheet (loaded after style.css)
    ========================================================= */
@@ -81,3 +83,6 @@
   .dash-header-inner, .dash-tabs, .dash-main{ padding-left:16px; padding-right:16px; }
   .dash-tabs{ overflow-x:auto; }
 }
+
+/* Products tab: group headings */
+.dash-group-count{ font-weight:400; color: var(--brown-soft); margin-left:10px; font-size:.82rem; }

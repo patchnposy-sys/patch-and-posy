@@ -299,27 +299,44 @@ async function syncLocalOrder(index) {
 let liveProductStatuses = {};
 
 function getCatalogProducts() {
+  // Order: Tablecloths (Volume 2), Accessories (Volume 2), Spreads (Volume 1)
   return [
-    ...(typeof SPREADS !== "undefined" ? SPREADS : []),
-    ...(typeof TABLECLOTHS !== "undefined" ? TABLECLOTHS : []),
-    ...(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
+    ...(typeof TABLECLOTH_DESIGNS !== "undefined" ? TABLECLOTH_DESIGNS : []),
+    ...(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : []),
+    ...(typeof SPREADS !== "undefined" ? SPREADS : [])
   ];
 }
 
-async function loadProductStatuses() {
-  const fb = initFirebase();
-  const tbody = document.getElementById("products-table-body");
-  if (!fb || !fb.db || !tbody) return;
-
-  try {
-    const snapshot = await fb.db.collection("productStatus").get();
-    liveProductStatuses = {};
-    snapshot.docs.forEach((doc) => { liveProductStatuses[doc.id] = doc.data().status; });
-    renderProductsTable();
-  } catch (err) {
-    console.error("Failed to load product statuses:", err);
-    tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">Couldn't load product statuses. Check your Firestore Security Rules.</td></tr>`;
+/* Group heading each product is listed under in the Products tab */
+function productGroup(p) {
+  if (p.style) {
+    const style = (typeof TABLECLOTH_STYLES !== "undefined" ? TABLECLOTH_STYLES : []).find(s => s.id === p.style);
+    return "Tablecloths — " + (style ? style.name : p.style);
   }
+  if (p.category) return "Accessories — " + p.category;
+  return "Volume 1 — Patchwork Spreads";
+}
+
+function liveStatusOf(p) {
+  return String(liveProductStatuses[p.id] || p.tag || "").toUpperCase();
+}
+
+function productRowHTML(p) {
+  const status = liveStatusOf(p);
+  return `
+    <tr>
+      <td>${escapeHTML(p.id)}</td>
+      <td>${escapeHTML(p.name)}</td>
+      <td>${escapeHTML(productGroup(p))}</td>
+      <td>${escapeHTML(p.tag || "—")}</td>
+      <td>
+        <select class="dash-status-select" data-product-id="${escapeHTML(p.id)}">
+          ${["AVAILABLE", "SOLD"].map(s =>
+            `<option value="${s}" ${status === s ? "selected" : ""}>${s}</option>`
+          ).join("")}
+        </select>
+      </td>
+    </tr>`;
 }
 
 function renderProductsTable() {
@@ -332,24 +349,26 @@ function renderProductsTable() {
     return;
   }
 
-  tbody.innerHTML = products.map((p) => {
-    const liveStatus = liveProductStatuses[p.id] || p.tag || "AVAILABLE";
-    return `
-      <tr>
-        <td>${escapeHTML(p.id)}</td>
-        <td>${escapeHTML(p.name)}</td>
-        <td>${escapeHTML(p.category || p.subcategory || "—")}</td>
-        <td>${escapeHTML(p.tag || "—")}</td>
-        <td>
-          <select class="dash-status-select" data-product-id="${escapeHTML(p.id)}">
-            ${["AVAILABLE", "SOLD"].map(s =>
-              `<option value="${s}" ${liveStatus.toUpperCase() === s ? "selected" : ""}>${s}</option>`
-            ).join("")}
-          </select>
-        </td>
-      </tr>
-    `;
-  }).join("");
+  // Group products by category, keeping the order they first appear in
+  const groups = new Map();
+  products.forEach((p) => {
+    const key = productGroup(p);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  });
+
+  let html = "";
+  groups.forEach((items, name) => {
+    const available = items.filter(p => liveStatusOf(p) === "AVAILABLE").length;
+    html += `
+      <tr class="dash-group-row">
+        <th colspan="5">${escapeHTML(name)}
+          <span class="dash-group-count">${available} of ${items.length} available</span>
+        </th>
+      </tr>`;
+    html += items.map(productRowHTML).join("");
+  });
+  tbody.innerHTML = html;
 
   tbody.querySelectorAll(".dash-status-select").forEach((select) => {
     select.addEventListener("change", () => updateProductStatus(select.dataset.productId, select.value));

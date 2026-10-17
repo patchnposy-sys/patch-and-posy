@@ -207,6 +207,73 @@ TABLECLOTHS.forEach((t) => {
 });
 
 /* ============================================================
+   TABLECLOTH STYLES (Volume 2) — three style categories.
+   Order here is the order shown: Patchwork, Lacework, Dailywares.
+   folder    - sub-folder inside TABLECLOTH_FOLDER (spaces allowed)
+   thumbnail - category card image inside TABLECLOTH_FOLDER
+   price     - default price (PKR) for every design in the style
+   codes     - design codes; each design has photos <code>a.jpg,
+               <code>b.jpg, <code>c.jpg inside the style folder.
+               The c photo is the design's card thumbnail.
+   All description text below is DUMMY placeholder text.
+   ============================================================ */
+const TABLECLOTH_STYLES = [
+  {
+    id: "patchwork",
+    name: "Patchwork",
+    folder: "Patchwork Style",
+    thumbnail: "Patchwork-thumbnail.jpg",
+    price: 5500,
+    description: "DUMMY: Patchwork tablecloths are pieced from many prints and colours in classic block patterns, stitched by hand.",
+    codes: ["TC03", "TC011", "TC012"]
+  },
+  {
+    id: "lacework",
+    name: "Lacework",
+    folder: "Lacework",
+    thumbnail: "Lacework-thumbnail.jpg",
+    price: 4500,
+    description: "DUMMY: Lacework tablecloths are finished with soft lace edging and printed or plain fabrics for a delicate table.",
+    codes: ["TC02", "TC04", "TC05", "TC07", "TC09", "TC013", "TC014"]
+  },
+  {
+    id: "dailywares",
+    name: "Dailywares",
+    folder: "Dailywares",
+    thumbnail: "Dailywares-thumbnail.jpg",
+    price: 3500,
+    description: "DUMMY: Dailywares tablecloths are practical everyday pieces in gingham and simple prints, easy to wash and use.",
+    codes: ["TC01", "TC06", "TC08", "TC010"]
+  }
+];
+
+/* Builds one entry per design code. Each design can still be changed
+   by hand: set its own price, tag ("AVAILABLE" / "SOLD" / other),
+   description, dimensions or care text in this array after it is built. */
+const TABLECLOTH_DESIGNS = [];
+TABLECLOTH_STYLES.forEach((style) => {
+  style.codes.forEach((code) => {
+    const photos = ["a", "b", "c"].map(s => TABLECLOTH_FOLDER + encodeURI(style.folder + "/" + code + s + ".jpg"));
+    TABLECLOTH_DESIGNS.push({
+      id: "DS-" + code,
+      code: code,
+      name: code,
+      style: style.id,
+      price: style.price,
+      tag: "AVAILABLE",
+      description: "DUMMY: A hand-pieced design from our Volume 2 tablecloth collection, stitched patch by patch for everyday meals and festive dinners.",
+      dimensions: [
+        { size: "4-seater square", measure: "DUMMY 60 × 60 in" },
+        { size: "6-seater rectangle", measure: "DUMMY 60 × 108 in" }
+      ],
+      careInstructions: "DUMMY: Hand wash in cold water with mild soap. Dry in shade and iron on low heat.",
+      photos: photos,
+      card: photos[2]
+    });
+  });
+});
+
+/* ============================================================
    ACCESSORIES
    Sample placeholders — swap in real photos & details any time.
    category — groups items under filter chips on the site.

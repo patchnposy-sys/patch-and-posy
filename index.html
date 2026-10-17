@@ -17,8 +17,8 @@
   <div class="nav">
   
     <nav class="nav-links">
-            <a href="#tablecloths">Tablecloths</a>
-      <a href="#spreads">Spreads</a>
+            <a href="#spreads">Patchwork Spreads</a>
+      <a href="#tablecloths">Tablecloths</a>
       <a href="#accessories">Accessories</a>
       <a href="#story">Our Story</a>
       <a href="#newsletter">Journal</a>
@@ -33,11 +33,11 @@
 <section class="hero" id="top">
   <div class="hero-grid">
     <div>
-      <p class="eyebrow-quote">"Stitched with love, made for home."</p>
+      <p class="eyebrow-quote">"Made with care, for every home."</p>
       <h1>Handmade pieces for <em>homes</em> that remember how to feel warm.</h1>
       <p class="lede">Quilts, tablecloths, coasters and little treasures — each one patched and stitched at home by hand, the way our mothers taught us. Nothing rushed, nothing machine-perfect.</p>
       <div class="hero-ctas">
-        <a href="#shop" class="btn-primary">Shop the collection</a>
+        <a href="#tablecloths" class="btn-primary">Shop the collection</a>
         <a href="#story" class="btn-secondary">Read our story</a>
       </div>
     </div>
@@ -64,18 +64,33 @@
   </div>
 </section>
 
-<section class="section shop" id="spreads">
+<section class="section shop" id="accessories">
   <div class="wrap">
+    <p class="section-eyebrow">New collection · Volume 2</p>
     <div class="section-head">
-      <h2>Patchwork Spreads — Volume 1</h2>
-      <p>Fifteen one-of-a-kind spreads, each pieced and quilted by hand. Fabric grain, thread tension, and colour will vary slightly — proof it was truly made, not printed.</p>
+      <h2>Accessories</h2>
+      <p>Small handmade pieces — tea cozies, pot holders, and bread cloths — for the little corners of a home that deserve warmth too.</p>
     </div>
-    <!-- Product cards are rendered here by js/main.js from js/products-data.js -->
-    <div class="patch-grid" id="spreads-grid"></div>
+    <div class="filter-chips" id="accessories-filters"></div>
+    <div id="accessories-content"></div>
   </div>
 </section>
 
-
+<section class="section shop" id="spreads">
+  <div class="wrap">
+    <div class="collection-banner spreads-open" role="button" tabindex="0" aria-label="Open Patchwork Spreads" data-banner="images/V1-BedSpreads/Thumbnail.JPG">
+      <div class="collection-banner-text">
+        <p class="collection-eyebrow">Volume 1 · Sold out</p>
+        <h3>Patchwork Spreads</h3>
+      </div>
+    </div>
+    <div class="section-head">
+      <h2>Patchwork Spreads</h2>
+      <p>Fifteen one-of-a-kind spreads, each pieced and quilted by hand. All sold — tap to see them.</p>
+    </div>
+    <button type="button" class="btn-add-bag spreads-open">View spreads</button>
+  </div>
+</section>
 
 <section class="section volume-story" id="volume-one">
   <div class="wrap">
@@ -85,19 +100,6 @@
     </div>
     <!-- Event photos are rendered here by js/main.js from js/products-data.js (EVENT_GALLERY) -->
     <div class="event-gallery" id="event-gallery"></div>
-  </div>
-</section>
-
-
-
-<section class="section shop" id="accessories">
-  <div class="wrap">
-    <div class="section-head">
-      <h2>Accessories</h2>
-      <p>Small handmade pieces — tea cozies, pot holders, and bread cloths — for the little corners of a home that deserve warmth too.</p>
-    </div>
-    <div class="filter-chips" id="accessories-filters"></div>
-    <div id="accessories-content"></div>
   </div>
 </section>
 
@@ -181,8 +183,8 @@ From my mother's Singer to my PFAFF, the machines may be different, but the love
     </div>
     <div class="footer-col">
       <h4>Shop</h4>
-            <a href="#tablecloths">Tablecloths</a>
-      <a href="#spreads">Patchwork Spreads</a>
+            <a href="#spreads">Patchwork Spreads</a>
+      <a href="#tablecloths">Tablecloths</a>
       <a href="#accessories">Accessories</a>
     </div>
     <div class="footer-col">
@@ -304,6 +306,15 @@ From my mother's Singer to my PFAFF, the machines may be different, but the love
   <div class="modal-inner bread-inner">
     <button type="button" class="drawer-close" id="tablecloth-close" aria-label="Close">✕</button>
     <div id="tablecloth-body"></div>
+  </div>
+</div>
+
+<!-- ============ PATCHWORK SPREADS POPUP (thumbnail → all spreads, sold) ============ -->
+<div class="drawer-overlay" id="spreads-overlay"></div>
+<div class="modal bread-modal" id="spreads-modal" role="dialog" aria-label="Patchwork Spreads">
+  <div class="modal-inner bread-inner">
+    <button type="button" class="drawer-close" id="spreads-close" aria-label="Close">✕</button>
+    <div id="spreads-body"></div>
   </div>
 </div>
 

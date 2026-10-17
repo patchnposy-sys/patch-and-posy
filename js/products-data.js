@@ -103,7 +103,7 @@ const SPREADS = [
     name: "S-0008 Cotton Candy",
     desc: "A playful mix of soft pink, cheerful marigold yellow and pale sky blue, arranged in a vibrant checkerboard rhythm. Sweet, nostalgic and full of colour, this cheerful patchwork brings a little candy-like joy to any room.",
     price: 8000,
-    tag: "AVAILABLE",
+    tag: "SOLD",
     image: "images/20260809_100948.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },

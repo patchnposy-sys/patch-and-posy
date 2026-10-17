@@ -643,3 +643,18 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
 .tc-price{ font-size:1.3rem; font-weight:600; }
 .tc-dims{ list-style:none; padding:0; margin:0; display:grid; gap:6px; }
 .tc-dims li{ display:flex; justify-content:space-between; gap:12px; border-bottom:1px dashed #D9CBB0; padding:6px 0; }
+
+/* ---------- Layout fixes: show whole photos, section labels, Patchwork Spreads popup ---------- */
+.section-eyebrow{ font-size:.75rem; letter-spacing:.14em; text-transform:uppercase; color:#8A6B4D; margin-bottom:12px; }
+.tablecloth-tile-photo img,
+.tc-style-photo img,
+.spread-photo img{ object-fit: contain !important; background: #EFE6D2; }
+.bread-photos img{ aspect-ratio: auto !important; height: auto; max-height: 70vh; object-fit: contain !important; background: #EFE6D2; }
+.tc-zoom{ cursor: zoom-in; }
+.spread-grid{ display:grid; grid-template-columns: 1fr; gap: 18px; }
+@media (min-width: 700px){ .spread-grid{ grid-template-columns: repeat(3, 1fr); } }
+.spread-photo{ position:relative; aspect-ratio: 4 / 5; overflow:hidden; border-radius:6px; background:#EFE6D2; display:flex; align-items:center; justify-content:center; }
+.spread-info h3{ font-size:1rem; font-weight:600; margin-top:8px; }
+.spread-info .desc{ font-size:.88rem; color:#8A6B4D; line-height:1.5; margin-top:4px; }
+.spread-info .price{ font-weight:600; margin-top:6px; }
+.spread-info .tc-tag{ display:inline-block; margin-top:6px; }

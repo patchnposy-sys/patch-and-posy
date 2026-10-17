@@ -5,7 +5,7 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-  renderGrid("spreads-grid", typeof SPREADS !== "undefined" ? SPREADS : []);
+  // Spreads now live in the Patchwork Spreads popup (see initSpreadsModal).
   // Daily Wear is hidden for now.
   renderAccessories(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : []);
   renderEventGallery(typeof EVENT_GALLERY !== "undefined" ? EVENT_GALLERY : []);
@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTeaModal();
   initTableclothModal();
   initTableclothBanner();
+  initSpreadsModal();
   initKidsModal();
 
   if (typeof initFirebase === "function") initFirebase();
@@ -789,7 +790,7 @@ function showTableclothDetail(id) {
   body.innerHTML = `
     <button type="button" class="bread-back" id="tc-back-designs">← Back to ${escapeHTML(style ? style.name : "designs")}</button>
     <h3 class="bread-title">${escapeHTML(d.name)}</h3>
-    <div class="bread-photos">
+    <div class="bread-photos tc-zoom">
       ${d.photos.map(src => imgTag(src, d.name)).join("")}
     </div>
     <div class="tc-detail">
@@ -824,6 +825,11 @@ function initTableclothModal() {
   document.addEventListener("click", (e) => {
     if (e.target.closest(".tablecloth-open")) openTableclothModal();
   });
+  // Photos open full size in the lightbox when clicked.
+  document.addEventListener("click", (e) => {
+    const img = e.target.closest(".tc-zoom img");
+    if (img) openLightbox(img.currentSrc || img.src, img.alt);
+  });
   document.getElementById("tablecloth-close")?.addEventListener("click", closeTableclothModal);
   document.getElementById("tablecloth-overlay")?.addEventListener("click", closeTableclothModal);
   document.addEventListener("keydown", (e) => {
@@ -832,11 +838,68 @@ function initTableclothModal() {
 }
 
 
-/* Banner photo is added by the script (not static HTML) so the extension fallback always works. */
+/* Banner photo is added by the script (not static HTML) so the extension fallback always works.
+   A banner can set its own photo with data-banner; otherwise it uses the tablecloth thumbnail. */
 function initTableclothBanner() {
   document.querySelectorAll(".collection-banner").forEach((banner) => {
     if (banner.querySelector("img")) return;
-    banner.insertAdjacentHTML("afterbegin", imgTag(TABLECLOTH_THUMBNAIL, "Tablecloths — new collection", "fill"));
+    const src = banner.dataset.banner || TABLECLOTH_THUMBNAIL;
+    banner.insertAdjacentHTML("afterbegin", imgTag(src, banner.getAttribute("aria-label") || "", "fill"));
+  });
+}
+
+/* ---------- Patchwork Spreads (Volume 1, all sold): thumbnail → popup with every spread, photo full size ---------- */
+function openSpreadsModal() {
+  const overlay = document.getElementById("spreads-overlay");
+  const modal = document.getElementById("spreads-modal");
+  if (!overlay || !modal) return;
+  showSpreads();
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSpreadsModal() {
+  const overlay = document.getElementById("spreads-overlay");
+  const modal = document.getElementById("spreads-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  document.body.style.overflow = "";
+}
+
+function spreadCardHTML(p) {
+  return `
+    <div class="spread-card">
+      <div class="spread-photo tc-zoom">${imgTag(p.image, p.name, "fill")}</div>
+      <div class="spread-info">
+        <h3>${escapeHTML(p.name)}</h3>
+        <p class="desc">${escapeHTML(p.desc)}</p>
+        <p class="price">${formatPKR(p.price)}</p>
+        <span class="tc-tag" data-tag-for="${escapeHTML(p.id)}">${escapeHTML(p.tag)}</span>
+      </div>
+    </div>`;
+}
+
+function showSpreads() {
+  const body = document.getElementById("spreads-body");
+  if (!body) return;
+  const items = typeof SPREADS !== "undefined" ? SPREADS : [];
+  body.innerHTML = `
+    <h3 class="bread-title">Patchwork Spreads · Volume 1</h3>
+    <p class="bread-hint">All fifteen spreads are sold. Tap a photo to see it full size.</p>
+    <div class="spread-grid">${items.map(spreadCardHTML).join("")}</div>`;
+  applyLiveProductStatuses();
+}
+
+function initSpreadsModal() {
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".spreads-open")) openSpreadsModal();
+  });
+  document.getElementById("spreads-close")?.addEventListener("click", closeSpreadsModal);
+  document.getElementById("spreads-overlay")?.addEventListener("click", closeSpreadsModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSpreadsModal();
   });
 }
 

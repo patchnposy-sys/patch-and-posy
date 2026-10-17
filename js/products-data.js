@@ -482,9 +482,9 @@ const EVENT_GALLERY = [
 const KIDS_DASTERKHWAN_FOLDER = "images/V2-KidsDasterkhwan/";
 const KIDS_DASTERKHWAN_THUMBNAIL = KIDS_DASTERKHWAN_FOLDER + "Thumbnail.JPG";
 const KIDS_DASTERKHWANS = [
-  { id: "KD-001", name: "Kids Dasterkhwan — Design 1", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D1B.JPG", photos: ["D1A.JPG", "D1B.JPG", "D1C.JPG"] },
-  { id: "KD-002", name: "Kids Dasterkhwan — Design 2", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D2B.JPG", photos: ["D2A.JPG", "D2B.JPG", "D2C.JPG"] },
-  { id: "KD-003", name: "Kids Dasterkhwan — Design 3", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D3B.JPG", photos: ["D3A.JPG", "D3B.JPG", "D3C.JPG"] }
+  { id: "KD-001", name: "Kids Dasterkhwan — Design 1", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D1b.JPG", photos: ["D1a.JPG", "D1b.JPG", "D1c.JPG"] },
+  { id: "KD-002", name: "Kids Dasterkhwan — Design 2", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D2b.JPG", photos: ["D2a.JPG", "D2b.JPG", "D2c.JPG"] },
+  { id: "KD-003", name: "Kids Dasterkhwan — Design 3", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D3b.JPG", photos: ["D3a.JPG", "D3b.JPG", "D3c.JPG"] }
 ];
 
 KIDS_DASTERKHWANS.forEach((k) => {

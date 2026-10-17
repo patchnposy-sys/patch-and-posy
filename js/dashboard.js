@@ -4,9 +4,24 @@
  * list, or update orders — that's enforced server-side by the Firestore
  * Security Rules described in SETUP.md, not just by this file, so the
  * data stays private even if someone finds this page's URL.
+ *
+ * Changes on the Orders, Products and Prices tabs are STAGED. Nothing is
+ * written until "Save changes" is pressed at the bottom of the page, and
+ * "Cancel" throws the staged changes away. After a save the page reloads
+ * so everything shown matches what is live on the website.
  */
 
 let allOrders = [];
+
+/* Saved values from Firestore */
+let liveProductStatuses = {};   // productId -> "AVAILABLE" | "SOLD"
+let liveProductPrices = {};     // productId -> number (rupees)
+
+/* Staged (not yet saved) changes */
+let pendingOrderStatus = {};    // orderId -> status
+let pendingProductStatus = {};  // productId -> "AVAILABLE" | "SOLD"
+let pendingPrices = {};         // productId -> number
+let invalidPriceIds = new Set();
 
 document.addEventListener("DOMContentLoaded", () => {
   const fb = initFirebase();
@@ -29,7 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initTabs();
   initOrderFilters();
   initOrderDetailModal();
+  initSaveBar();
   renderLocalOrders();
+  if (typeof initEmailJS === "function") initEmailJS();
 });
 
 /* ---------- Login ---------- */
@@ -63,7 +80,10 @@ function showLoginStatus(message, state) {
 function initLogout(fb) {
   const btn = document.getElementById("dash-logout-btn");
   if (!btn) return;
-  btn.addEventListener("click", () => fb.auth.signOut());
+  btn.addEventListener("click", () => {
+    if (hasUnsavedChanges() && !window.confirm("You have unsaved changes. Log out and discard them?")) return;
+    fb.auth.signOut();
+  });
 }
 
 function showLoginScreen() {
@@ -87,7 +107,7 @@ function initTabs() {
       tab.classList.add("is-active");
       document.getElementById(`panel-${tab.dataset.tab}`).classList.add("is-active");
       if (tab.dataset.tab === "clients") renderClients();
-      if (tab.dataset.tab === "products") loadProductStatuses();
+      if (tab.dataset.tab === "products" || tab.dataset.tab === "prices") loadProductStatuses();
       if (tab.dataset.tab === "local") renderLocalOrders();
     });
   });
@@ -103,24 +123,33 @@ async function loadOrders() {
     const snapshot = await fb.db.collection("orders").orderBy("createdAt", "desc").get();
     allOrders = snapshot.docs.map((doc) => doc.data());
     renderOrdersTable();
+    updateSaveBar();
   } catch (err) {
     console.error("Failed to load orders:", err);
     tbody.innerHTML = `<tr><td colspan="8" class="dash-empty">Couldn't load orders. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
   }
 }
 
+/* The status shown for an order: the staged one if there is one, otherwise the saved one */
+function orderStatusOf(order) {
+  return pendingOrderStatus[order.orderId] || order.status || "new";
+}
+
 function renderOrdersTable() {
   const tbody = document.getElementById("orders-table-body");
   const filter = document.getElementById("orders-status-filter").value;
-  const filtered = filter ? allOrders.filter((o) => o.status === filter) : allOrders;
+  const filtered = filter ? allOrders.filter((o) => orderStatusOf(o) === filter) : allOrders;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" class="dash-empty">No orders yet.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map((order) => `
-    <tr>
+  tbody.innerHTML = filtered.map((order) => {
+    const current = orderStatusOf(order);
+    const changed = pendingOrderStatus[order.orderId] !== undefined;
+    return `
+    <tr class="${changed ? "dash-row-changed" : ""}">
       <td>${escapeHTML(order.orderId)}</td>
       <td>${formatDate(order.createdAt)}</td>
       <td>${escapeHTML(order.customer?.name || "")}</td>
@@ -130,40 +159,42 @@ function renderOrdersTable() {
       <td>
         <select class="dash-status-select" data-order-id="${escapeHTML(order.orderId)}">
           ${["new", "confirmed", "shipped", "completed", "cancelled"].map(s =>
-            `<option value="${s}" ${order.status === s ? "selected" : ""}>${s}</option>`
+            `<option value="${s}" ${current === s ? "selected" : ""}>${s}</option>`
           ).join("")}
         </select>
       </td>
       <td><button type="button" class="dash-view-btn" data-order-id="${escapeHTML(order.orderId)}">View</button></td>
-    </tr>
-  `).join("");
+    </tr>`;
+  }).join("");
 
   tbody.querySelectorAll(".dash-status-select").forEach((select) => {
-    select.addEventListener("change", () => updateOrderStatus(select.dataset.orderId, select.value));
+    select.addEventListener("change", () => setPendingOrderStatus(select.dataset.orderId, select.value));
   });
   tbody.querySelectorAll(".dash-view-btn").forEach((btn) => {
     btn.addEventListener("click", () => openOrderDetail(btn.dataset.orderId));
   });
 }
 
-async function updateOrderStatus(orderId, status) {
-  const fb = initFirebase();
-  if (!fb || !fb.db) return;
-  try {
-    await fb.db.collection("orders").doc(orderId).update({ status });
-    const order = allOrders.find((o) => o.orderId === orderId);
-    if (order) order.status = status;
-  } catch (err) {
-    console.error("Failed to update status:", err);
-    alert("Couldn't update this order's status. Please try again.");
-  }
+function setPendingOrderStatus(orderId, status) {
+  const order = allOrders.find((o) => o.orderId === orderId);
+  if (!order) return;
+  if (status === (order.status || "new")) delete pendingOrderStatus[orderId];
+  else pendingOrderStatus[orderId] = status;
+  renderOrdersTable();
+  updateSaveBar();
 }
 
 function initOrderFilters() {
   const filter = document.getElementById("orders-status-filter");
   if (filter) filter.addEventListener("change", renderOrdersTable);
   const refreshBtn = document.getElementById("orders-refresh-btn");
-  if (refreshBtn) refreshBtn.addEventListener("click", loadOrders);
+  if (refreshBtn) refreshBtn.addEventListener("click", () => {
+    if (hasUnsavedChanges()) {
+      alert("Save or cancel your unsaved changes first, then refresh.");
+      return;
+    }
+    loadOrders();
+  });
 }
 
 /* ---------- Order detail modal ---------- */
@@ -295,9 +326,7 @@ async function syncLocalOrder(index) {
   }
 }
 
-/* ---------- Products (live AVAILABLE / SOLD status) ---------- */
-let liveProductStatuses = {};
-
+/* ---------- Products + Prices (live from Firestore) ---------- */
 function getCatalogProducts() {
   // Order: Tablecloths (Volume 2), Accessories (Volume 2), Spreads (Volume 1)
   return [
@@ -307,7 +336,11 @@ function getCatalogProducts() {
   ];
 }
 
-/* Group heading each product is listed under in the Products tab */
+function findProduct(productId) {
+  return getCatalogProducts().find((p) => p.id === productId);
+}
+
+/* Group heading each product is listed under in the Products and Prices tabs */
 function productGroup(p) {
   if (p.style) {
     const style = (typeof TABLECLOTH_STYLES !== "undefined" ? TABLECLOTH_STYLES : []).find(s => s.id === p.style);
@@ -317,49 +350,70 @@ function productGroup(p) {
   return "Volume 1 — Patchwork Spreads";
 }
 
+/* Saved status (what the website shows now) */
 function liveStatusOf(p) {
   return String(liveProductStatuses[p.id] || p.tag || "").toUpperCase();
 }
 
-function productRowHTML(p) {
-  const status = liveStatusOf(p);
-  return `
-    <tr>
-      <td>${escapeHTML(p.id)}</td>
-      <td>${escapeHTML(p.name)}</td>
-      <td>${escapeHTML(productGroup(p))}</td>
-      <td>${escapeHTML(p.tag || "—")}</td>
-      <td>
-        <select class="dash-status-select" data-product-id="${escapeHTML(p.id)}">
-          ${["AVAILABLE", "SOLD"].map(s =>
-            `<option value="${s}" ${status === s ? "selected" : ""}>${s}</option>`
-          ).join("")}
-        </select>
-      </td>
-    </tr>`;
+/* Saved price (what the website charges now) */
+function livePriceOf(p) {
+  return liveProductPrices[p.id] || p.price;
+}
+
+function groupedProducts() {
+  const groups = new Map();
+  getCatalogProducts().forEach((p) => {
+    const key = productGroup(p);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  });
+  return groups;
+}
+
+/* Loads the saved statuses and prices, then draws both tabs */
+async function loadProductStatuses() {
+  const fb = initFirebase();
+  if (fb && fb.db) {
+    try {
+      const [statusSnap, priceSnap] = await Promise.all([
+        fb.db.collection("productStatus").get(),
+        fb.db.collection("productPrices").get()
+      ]);
+      liveProductStatuses = {};
+      liveProductPrices = {};
+      statusSnap.docs.forEach((doc) => {
+        const status = doc.data().status;
+        if (status) liveProductStatuses[doc.id] = String(status).toUpperCase();
+      });
+      priceSnap.docs.forEach((doc) => {
+        const price = Number(doc.data().price);
+        if (price > 0) liveProductPrices[doc.id] = price;
+      });
+    } catch (err) {
+      console.error("Failed to load product data:", err);
+      const message = `<tr><td colspan="5" class="dash-empty">Couldn't load live data. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
+      document.getElementById("products-table-body").innerHTML = message;
+      document.getElementById("prices-table-body").innerHTML = message.replace('colspan="5"', 'colspan="4"');
+      return;
+    }
+  }
+  renderProductsTable();
+  renderPricesTable();
+  updateSaveBar();
 }
 
 function renderProductsTable() {
   const tbody = document.getElementById("products-table-body");
   if (!tbody) return;
 
-  const products = getCatalogProducts();
-  if (products.length === 0) {
+  if (getCatalogProducts().length === 0) {
     tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
     return;
   }
 
-  // Group products by category, keeping the order they first appear in
-  const groups = new Map();
-  products.forEach((p) => {
-    const key = productGroup(p);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(p);
-  });
-
   let html = "";
-  groups.forEach((items, name) => {
-    const available = items.filter(p => liveStatusOf(p) === "AVAILABLE").length;
+  groupedProducts().forEach((items, name) => {
+    const available = items.filter(p => (pendingProductStatus[p.id] || liveStatusOf(p)) === "AVAILABLE").length;
     html += `
       <tr class="dash-group-row">
         <th colspan="5">${escapeHTML(name)}
@@ -371,45 +425,248 @@ function renderProductsTable() {
   tbody.innerHTML = html;
 
   tbody.querySelectorAll(".dash-status-select").forEach((select) => {
-    select.addEventListener("change", () => updateProductStatus(select.dataset.productId, select.value));
+    select.addEventListener("change", () => setPendingProductStatus(select.dataset.productId, select.value));
   });
 }
 
-/* Reads the live AVAILABLE / SOLD overrides from Firestore, then draws the table */
-async function loadProductStatuses() {
-  const fb = initFirebase();
-  const tbody = document.getElementById("products-table-body");
-  if (fb && fb.db) {
-    try {
-      const snapshot = await fb.db.collection("productStatus").get();
-      liveProductStatuses = {};
-      snapshot.docs.forEach((doc) => {
-        const status = doc.data().status;
-        if (status) liveProductStatuses[doc.id] = String(status).toUpperCase();
-      });
-    } catch (err) {
-      console.error("Failed to load product statuses:", err);
-      if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">Couldn't load live statuses. Showing default statuses from the code. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
-      }
-    }
-  }
-  renderProductsTable();
+function productRowHTML(p) {
+  const saved = liveStatusOf(p);
+  const chosen = pendingProductStatus[p.id] || saved;
+  const changed = pendingProductStatus[p.id] !== undefined;
+  const options = [...new Set(["AVAILABLE", "SOLD", chosen])];
+
+  return `
+    <tr class="${changed ? "dash-row-changed" : ""}">
+      <td>${escapeHTML(p.id)}</td>
+      <td>${escapeHTML(p.name)}</td>
+      <td>${escapeHTML(productGroup(p))}</td>
+      <td><span class="dash-live-badge${saved === "AVAILABLE" ? " is-available" : ""}">${escapeHTML(saved)}</span></td>
+      <td>
+        <select class="dash-status-select" data-product-id="${escapeHTML(p.id)}">
+          ${options.map(s => `<option value="${escapeHTML(s)}" ${chosen === s ? "selected" : ""}>${escapeHTML(s)}</option>`).join("")}
+        </select>
+      </td>
+    </tr>`;
 }
 
-async function updateProductStatus(productId, status) {
-  const fb = initFirebase();
-  if (!fb || !fb.db) return;
-  try {
-    await fb.db.collection("productStatus").doc(productId).set({
-      status,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
-    liveProductStatuses[productId] = status;
-  } catch (err) {
-    console.error("Failed to update product status:", err);
-    alert("Couldn't update this product's status. Please try again.");
+function setPendingProductStatus(productId, status) {
+  const p = findProduct(productId);
+  if (!p) return;
+  if (status === liveStatusOf(p)) delete pendingProductStatus[productId];
+  else pendingProductStatus[productId] = status;
+  renderProductsTable();
+  updateSaveBar();
+}
+
+function renderPricesTable() {
+  const tbody = document.getElementById("prices-table-body");
+  if (!tbody) return;
+
+  invalidPriceIds.clear();
+
+  if (getCatalogProducts().length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
+    return;
   }
+
+  let html = "";
+  groupedProducts().forEach((items, name) => {
+    html += `
+      <tr class="dash-group-row">
+        <th colspan="4">${escapeHTML(name)}</th>
+      </tr>`;
+    html += items.map(priceRowHTML).join("");
+  });
+  tbody.innerHTML = html;
+
+  tbody.querySelectorAll(".dash-price-input").forEach((input) => {
+    input.addEventListener("input", () => setPendingPrice(input));
+  });
+}
+
+function priceRowHTML(p) {
+  const pending = pendingPrices[p.id];
+  return `
+    <tr class="${pending !== undefined ? "dash-row-changed" : ""}">
+      <td>${escapeHTML(p.id)}</td>
+      <td>${escapeHTML(p.name)}</td>
+      <td>${formatPKR(livePriceOf(p))}</td>
+      <td>
+        <input type="number" min="1" step="1" inputmode="numeric" class="dash-price-input"
+          data-price-id="${escapeHTML(p.id)}" value="${pending !== undefined ? pending : ""}"
+          placeholder="Leave blank to keep">
+      </td>
+    </tr>`;
+}
+
+/* Reads a New Price box. Blank = no change. Must be a whole number above 0. */
+function setPendingPrice(input) {
+  const id = input.dataset.priceId;
+  const p = findProduct(id);
+  const raw = input.value.trim();
+
+  delete pendingPrices[id];
+  invalidPriceIds.delete(id);
+  input.classList.remove("is-invalid");
+
+  if (raw !== "" && p) {
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n <= 0) {
+      invalidPriceIds.add(id);
+      input.classList.add("is-invalid");
+    } else if (n !== livePriceOf(p)) {
+      pendingPrices[id] = n;
+    }
+  }
+
+  input.closest("tr").classList.toggle("dash-row-changed", pendingPrices[id] !== undefined);
+  updateSaveBar();
+}
+
+/* ---------- Staged changes: Save bar ---------- */
+function initSaveBar() {
+  document.getElementById("dash-save-btn")?.addEventListener("click", saveChanges);
+  document.getElementById("dash-cancel-btn")?.addEventListener("click", cancelChanges);
+
+  // Warn before closing or reloading the tab with unsaved changes
+  window.addEventListener("beforeunload", (e) => {
+    if (!hasUnsavedChanges()) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
+}
+
+/* Only changes that differ from what is saved count */
+function collectChanges() {
+  const orders = Object.entries(pendingOrderStatus)
+    .map(([orderId, status]) => ({ orderId, status, order: allOrders.find(o => o.orderId === orderId) }))
+    .filter(c => c.order && (c.order.status || "new") !== c.status);
+
+  const products = Object.entries(pendingProductStatus)
+    .map(([id, status]) => ({ id, status, product: findProduct(id) }))
+    .filter(c => c.product && liveStatusOf(c.product) !== c.status);
+
+  const prices = Object.entries(pendingPrices)
+    .map(([id, price]) => ({ id, price, product: findProduct(id) }))
+    .filter(c => c.product && livePriceOf(c.product) !== c.price);
+
+  return { orders, products, prices, invalid: invalidPriceIds.size };
+}
+
+function changeCount(changes) {
+  return changes.orders.length + changes.products.length + changes.prices.length;
+}
+
+function hasUnsavedChanges() {
+  return changeCount(collectChanges()) > 0 || invalidPriceIds.size > 0;
+}
+
+function updateSaveBar() {
+  const bar = document.getElementById("dash-savebar");
+  if (!bar) return;
+  const changes = collectChanges();
+  const count = changeCount(changes);
+  const countEl = document.getElementById("dash-savebar-count");
+
+  if (invalidPriceIds.size > 0) {
+    countEl.innerHTML = `<strong>Fix the red New Price boxes</strong> (whole numbers above 0)`;
+  } else {
+    countEl.innerHTML = count === 0
+      ? "No unsaved changes"
+      : `<strong>${count} unsaved change${count === 1 ? "" : "s"}</strong>`;
+  }
+
+  document.getElementById("dash-save-btn").disabled = count === 0 || invalidPriceIds.size > 0;
+  document.getElementById("dash-cancel-btn").disabled = count === 0 && invalidPriceIds.size === 0;
+  bar.hidden = count === 0 && invalidPriceIds.size === 0;
+}
+
+function setSaving(on, text) {
+  document.getElementById("dash-saving").hidden = !on;
+  document.getElementById("dash-saving-text").textContent = text || "Saving…";
+  document.getElementById("dash-save-btn").disabled = on;
+  document.getElementById("dash-cancel-btn").disabled = on;
+}
+
+function cancelChanges() {
+  if (!hasUnsavedChanges()) return;
+  if (!window.confirm("Discard all unsaved changes?")) return;
+
+  pendingOrderStatus = {};
+  pendingProductStatus = {};
+  pendingPrices = {};
+  invalidPriceIds.clear();
+
+  renderOrdersTable();
+  renderProductsTable();
+  renderPricesTable();
+  updateSaveBar();
+}
+
+async function saveChanges() {
+  const changes = collectChanges();
+  const total = changeCount(changes);
+
+  if (changes.invalid > 0) {
+    alert("Fix the red New Price boxes first. Prices must be whole numbers above 0.");
+    return;
+  }
+  if (total === 0) return;
+
+  const parts = [];
+  if (changes.orders.length) parts.push(`${changes.orders.length} order status change${changes.orders.length === 1 ? "" : "s"}`);
+  if (changes.products.length) parts.push(`${changes.products.length} product status change${changes.products.length === 1 ? "" : "s"}`);
+  if (changes.prices.length) parts.push(`${changes.prices.length} price change${changes.prices.length === 1 ? "" : "s"}`);
+
+  const willEmail = changes.orders.some((c) => typeof ORDER_STATUS_EMAILS !== "undefined" && ORDER_STATUS_EMAILS[c.status]);
+  const emailNote = willEmail ? "\n\nClients will be emailed about confirmed, shipped, completed or cancelled orders." : "";
+  if (!window.confirm(`Save ${parts.join(", ")}?${emailNote}\n\nThe website will show these changes after the page reloads.`)) return;
+
+  const fb = initFirebase();
+  if (!fb || !fb.db) {
+    alert("Firebase isn't connected, so nothing was saved.");
+    return;
+  }
+
+  setSaving(true, "Saving…");
+  try {
+    const now = new Date().toISOString();
+    const batch = fb.db.batch();
+
+    changes.orders.forEach((c) => {
+      batch.update(fb.db.collection("orders").doc(c.orderId), { status: c.status, statusUpdatedAt: now });
+    });
+    changes.products.forEach((c) => {
+      batch.set(fb.db.collection("productStatus").doc(c.id), { status: c.status, updatedAt: now }, { merge: true });
+    });
+    changes.prices.forEach((c) => {
+      batch.set(fb.db.collection("productPrices").doc(c.id), { price: c.price, updatedAt: now }, { merge: true });
+    });
+
+    await batch.commit();
+  } catch (err) {
+    console.error("Save failed:", err);
+    setSaving(false);
+    updateSaveBar();
+    alert("Couldn't save. Nothing was changed. Check your connection and try again.");
+    return;
+  }
+
+  // Email clients whose order status changed (confirmed, shipped, completed, cancelled)
+  const toEmail = changes.orders.filter((c) => typeof ORDER_STATUS_EMAILS !== "undefined" && ORDER_STATUS_EMAILS[c.status]);
+  let failedEmails = 0;
+  if (toEmail.length) {
+    setSaving(true, "Saved. Emailing clients…");
+    const results = await Promise.all(toEmail.map((c) => sendOrderStatusEmail(c.order, c.status)));
+    failedEmails = results.filter((ok) => !ok).length;
+  }
+
+  if (failedEmails) {
+    alert(`Your changes are saved, but ${failedEmails} client email${failedEmails === 1 ? " wasn't" : "s weren't"} sent. Check js/emailjs-config.js and SETUP.md.`);
+  }
+
+  setSaving(true, "Saved. Reloading the page…");
+  setTimeout(() => window.location.reload(), failedEmails ? 0 : 1200);
 }
 
 /* ---------- Helpers ---------- */

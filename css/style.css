@@ -658,8 +658,6 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
 .spread-info .desc{ font-size:.88rem; color:#8A6B4D; line-height:1.5; margin-top:4px; }
 .spread-info .price{ font-weight:600; margin-top:6px; }
 .spread-info .tc-tag{ display:inline-block; margin-top:6px; }
-<<<<<<< Updated upstream
-=======
 
 /* ---------- Lightbox sits above the product popups and shows the whole photo ---------- */
 #lightbox-overlay{ z-index: 110; }
@@ -673,4 +671,3 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
   top: 8px; right: 8px; width: 36px; height: 36px; border-radius: 50%;
   background: rgba(0,0,0,0.55); color: #FBF7EE; font-size: 1.1rem; line-height: 36px; text-align: center;
 }
->>>>>>> Stashed changes

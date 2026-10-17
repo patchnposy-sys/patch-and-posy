@@ -616,3 +616,30 @@ footer{ background: var(--ink); color: var(--cream); padding: 60px 32px 28px; po
 }
 #tablecloths:target{ animation: tc-flash 2.8s ease-out 1; }
 #tablecloths:target .collection-banner{ box-shadow: 0 0 0 4px #D6336C; }
+
+/* ---------- Tablecloths v2: style cards → designs → design detail ---------- */
+.tc-style-grid{ display:grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 700px){ .tc-style-grid{ grid-template-columns: repeat(3, 1fr); } }
+.tc-style-card{
+  display:flex; flex-direction:column; gap:8px; text-align:left;
+  background:none; border:0; padding:0; cursor:pointer; color:inherit; font:inherit;
+}
+.tc-style-photo{ position:relative; display:block; aspect-ratio: 4 / 3; overflow:hidden; border-radius:6px; background:#EFE6D2; }
+.tc-style-name{ font-weight:600; font-size:1.05rem; }
+.tc-style-desc{ font-size:.9rem; color:#8A6B4D; line-height:1.5; }
+.tc-style-meta{ font-size:.85rem; font-weight:600; }
+.tc-tile-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.tc-tile-price{ font-weight:600; }
+.tc-tag{
+  font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+  padding:3px 8px; border-radius:999px; background:#E8E0CC; color:#8A6B4D;
+}
+.tc-tag-available{ background: var(--teal); color: var(--paper); }
+.tc-detail{ margin-top:18px; display:grid; gap:16px; }
+.tc-section h4{ font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; color:#8A6B4D; margin-bottom:6px; }
+.tc-section p{ line-height:1.6; }
+.tc-price-row{ display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.tc-price-row h4{ width:100%; margin:0; }
+.tc-price{ font-size:1.3rem; font-weight:600; }
+.tc-dims{ list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+.tc-dims li{ display:flex; justify-content:space-between; gap:12px; border-bottom:1px dashed #D9CBB0; padding:6px 0; }

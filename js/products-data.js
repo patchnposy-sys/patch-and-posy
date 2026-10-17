@@ -173,38 +173,12 @@ const SPREADS = [
 ];
 
 /* ============================================================
-   TABLECLOTHS — new collection (Volume 2)
-   Folder: images/V2-Tablecloths/ (file names must match exactly,
-   including capitals and the extension). Thumbnail is the banner and
-   the card in the popup. TC01a/b/c are the three photos shown when
-   the customer opens the product.
+   TABLECLOTHS — Volume 2 photos live in images/V2-Tablecloths/
+   (style sub-folders; file names must match exactly, including
+   capitals and the extension — the server is case-sensitive).
    ============================================================ */
 const TABLECLOTH_FOLDER = "images/V2-Tablecloths/";
 const TABLECLOTH_THUMBNAIL = TABLECLOTH_FOLDER + "Thumbnail.JPG";
-
-/* Tablecloth 01 is the real product: card photo = TC01c, detail = all three photos.
-   02–04 are placeholders for upcoming designs (no photos, "COMING SOON").
-   Price and description are placeholders — set your own. */
-const TABLECLOTHS = [
-  {
-    id: "T-001",
-    name: "Tablecloth 01",
-    desc: "A hand-pieced tablecloth from our new collection, stitched patch by patch and finished for everyday meals and festive dinners alike.",
-    price: 12500,
-    tag: "AVAILABLE",
-    card: "TC01c.JPG",
-    photos: ["TC01a.JPG", "TC01b.JPG", "TC01c.JPG"]
-  },
-  { id: "T-002", name: "Tablecloth 02", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] },
-  { id: "T-003", name: "Tablecloth 03", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] },
-  { id: "T-004", name: "Tablecloth 04", desc: "A new design from our Volume 2 collection — coming soon.", price: 0, tag: "COMING SOON", card: "", photos: [] }
-];
-
-TABLECLOTHS.forEach((t) => {
-  const images = t.photos.map(file => TABLECLOTH_FOLDER + encodeURI(file));
-  t.image = t.card ? TABLECLOTH_FOLDER + encodeURI(t.card) : "";
-  t.gallery = images;
-});
 
 /* ============================================================
    TABLECLOTH STYLES (Volume 2) — three style categories.
@@ -257,7 +231,7 @@ TABLECLOTH_STYLES.forEach((style) => {
     TABLECLOTH_DESIGNS.push({
       id: "DS-" + code,
       code: code,
-      name: code,
+      name: style.name + " — " + code,
       style: style.id,
       price: style.price,
       tag: "AVAILABLE",
@@ -508,9 +482,9 @@ const EVENT_GALLERY = [
 const KIDS_DASTERKHWAN_FOLDER = "images/V2-KidsDasterkhwan/";
 const KIDS_DASTERKHWAN_THUMBNAIL = KIDS_DASTERKHWAN_FOLDER + "Thumbnail.JPG";
 const KIDS_DASTERKHWANS = [
-  { id: "KD-001", name: "Kids Dasterkhwan — Design 1", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D1b.jpg", photos: ["D1a.jpg", "D1b.jpg", "D1c.jpg"] },
-  { id: "KD-002", name: "Kids Dasterkhwan — Design 2", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D2b.jpg", photos: ["D2a.jpg", "D2b.jpg", "D2c.jpg"] },
-  { id: "KD-003", name: "Kids Dasterkhwan — Design 3", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D3b.jpg", photos: ["D3a.jpg", "D3b.jpg", "D3c.jpg"] }
+  { id: "KD-001", name: "Kids Dasterkhwan — Design 1", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D1B.JPG", photos: ["D1A.JPG", "D1B.JPG", "D1C.JPG"] },
+  { id: "KD-002", name: "Kids Dasterkhwan — Design 2", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D2B.JPG", photos: ["D2A.JPG", "D2B.JPG", "D2C.JPG"] },
+  { id: "KD-003", name: "Kids Dasterkhwan — Design 3", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D3B.JPG", photos: ["D3A.JPG", "D3B.JPG", "D3C.JPG"] }
 ];
 
 KIDS_DASTERKHWANS.forEach((k) => {

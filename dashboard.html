@@ -45,6 +45,7 @@
       <button type="button" class="dash-tab is-active" data-tab="orders">Orders</button>
       <button type="button" class="dash-tab" data-tab="clients">Clients</button>
       <button type="button" class="dash-tab" data-tab="products">Products</button>
+      <button type="button" class="dash-tab" data-tab="prices">Prices</button>
       <button type="button" class="dash-tab" data-tab="local">Unsynced local orders</button>
     </nav>
   </header>
@@ -116,7 +117,7 @@
     <section class="dash-panel" id="panel-products">
       <div class="dash-panel-head">
         <h2>Products</h2>
-        <p class="dash-panel-sub">Live AVAILABLE / SOLD status for every product — updates the website instantly, no code changes needed. Automatically set to SOLD when an order comes in via WhatsApp or the website checkout.</p>
+        <p class="dash-panel-sub">Pick AVAILABLE or SOLD, then press Save changes at the bottom of the page. The website updates after Save. Items sold through WhatsApp or the website checkout are set to SOLD automatically.</p>
       </div>
       <div class="dash-table-wrap">
         <table class="dash-table">
@@ -125,12 +126,35 @@
               <th>ID</th>
               <th>Name</th>
               <th>Category</th>
-              <th>Default (in code)</th>
               <th>Live status</th>
+              <th>Update Status</th>
             </tr>
           </thead>
           <tbody id="products-table-body">
             <tr><td colspan="5" class="dash-empty">Loading products…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PRICES TAB -->
+    <section class="dash-panel" id="panel-prices">
+      <div class="dash-panel-head">
+        <h2>Prices</h2>
+        <p class="dash-panel-sub">Live Price is what the website shows and charges now. Type a New Price in whole rupees, then press Save changes at the bottom of the page. Leave New Price blank to keep the current price.</p>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Live Price</th>
+              <th>New Price</th>
+            </tr>
+          </thead>
+          <tbody id="prices-table-body">
+            <tr><td colspan="4" class="dash-empty">Loading prices…</td></tr>
           </tbody>
         </table>
       </div>
@@ -162,6 +186,21 @@
   </main>
 </div>
 
+<!-- SAVE BAR: staged changes are written only when Save is pressed -->
+<div class="dash-savebar" id="dash-savebar" hidden>
+  <span class="dash-savebar-count" id="dash-savebar-count"></span>
+  <div class="dash-savebar-actions">
+    <button type="button" class="btn-secondary" id="dash-cancel-btn">Cancel</button>
+    <button type="button" class="btn-primary" id="dash-save-btn">Save changes</button>
+  </div>
+</div>
+
+<!-- SAVING OVERLAY -->
+<div class="dash-saving" id="dash-saving" hidden role="status" aria-live="polite">
+  <div class="dash-spinner" aria-hidden="true"></div>
+  <p id="dash-saving-text">Saving…</p>
+</div>
+
 <!-- ORDER DETAIL MODAL -->
 <div class="drawer-overlay" id="order-detail-overlay"></div>
 <div class="modal order-detail-modal" id="order-detail-modal" role="dialog" aria-label="Order details">
@@ -179,6 +218,8 @@
 <script src="js/store-config.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/products-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="js/emailjs-config.js"></script>
 <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -661,9 +661,11 @@ function initTeaModal() {
 const IMG_EXT_FALLBACKS = [".JPG", ".jpg", ".jpeg", ".JPEG", ".png", ".PNG", ".webp", ".WEBP", ".gif"];
 
 function imgTag(src, alt, mode) {
+  // Always start with IMG_EXT_FALLBACKS[0] (".JPG") and strip any extension written in the data,
+  // so uppercase .JPG files load and the retry list is tried in order from the start.
   const m = String(src).match(/\.[^./]+$/);
   const base = m ? src.slice(0, -m[0].length) : src;
-  const first = m ? m[0] : IMG_EXT_FALLBACKS[0];
+  const first = IMG_EXT_FALLBACKS[0];
   const style = mode === "fill"
     ? ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"'
     : "";

@@ -31,30 +31,21 @@ function renderCheckoutSummary() {
   const summary = document.getElementById("checkout-summary");
   if (!summary) return;
 
+  if (typeof refreshCartItems === "function") refreshCartItems();
   const cart = getCart();
   const subtotal = cartSubtotal();
-  const cityInput = document.getElementById("checkout-city");
-  const currentCity = cityInput ? cityInput.value : "";
-  const delivery = getDeliveryCharge(currentCity, subtotal);
-  const total = subtotal + delivery;
+  const total = subtotal;
 
   summary.innerHTML = `
     ${cart.map((item) => `
-      <div class="checkout-line">
-        <span>${escapeHTML(item.name)} × ${item.qty}</span>
+      <div class="checkout-line checkout-item">
+        <span class="checkout-thumb">${item.image ? `<img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.name)}">` : ""}</span>
+        <span class="checkout-item-name">${escapeHTML(item.name)} × ${item.qty}</span>
         <span>${formatPKR(item.price * item.qty)}</span>
       </div>
     `).join("")}
     <div class="checkout-line"><span>Subtotal</span><span>${formatPKR(subtotal)}</span></div>
-    <div class="checkout-line"><span>Delivery</span><span id="checkout-delivery-value">${delivery === 0 ? "Free" : formatPKR(delivery)}</span></div>
     <div class="checkout-line checkout-total"><span>Total</span><span id="checkout-total-value">${formatPKR(total)}</span></div>
-    <div class="checkout-bank-box">
-      <h4>Bank / Account Transfer details</h4>
-      <p>${escapeHTML(STORE_CONFIG.bankDetails.bankName)} — ${escapeHTML(STORE_CONFIG.bankDetails.accountTitle)}</p>
-      <p>Account No: ${escapeHTML(STORE_CONFIG.bankDetails.accountNumber)}</p>
-      <p>IBAN: ${escapeHTML(STORE_CONFIG.bankDetails.iban)}</p>
-      <p class="checkout-bank-note">Please transfer the total above and place your order — we'll confirm once payment is received.</p>
-    </div>
   `;
 }
 
@@ -109,14 +100,14 @@ async function submitOrder(event) {
   }
 
   const subtotal = cartSubtotal();
-  const deliveryCharge = getDeliveryCharge(city, subtotal);
-  const total = subtotal + deliveryCharge;
+  const deliveryCharge = 0;
+  const total = subtotal;
 
   const order = {
     orderId: generateOrderId(),
     createdAt: new Date().toISOString(),
     status: "new",
-    paymentMethod: "bank_transfer",
+    paymentMethod: "pay_after_confirmation",
     paymentStatus: "pending",
     customer: { name, email, phone, address, city },
     items: cart,
@@ -185,19 +176,13 @@ function showOrderConfirmation(order, emailResults) {
 
   const emailNote = emailResults.customerSent
     ? `A confirmation has been sent to ${escapeHTML(order.customer.email)}.`
-    : `We couldn't send an email confirmation automatically — please save your order number below.`;
+    : `We could not send an email confirmation automatically. Please keep your order number for reference.`;
 
   body.innerHTML = `
     <p class="confirm-order-id">Order ${escapeHTML(order.orderId)}</p>
     <p>Thank you, ${escapeHTML(order.customer.name)}! Your order has been received.</p>
     <p>${emailNote}</p>
-    <div class="checkout-bank-box">
-      <h4>Please complete your transfer to:</h4>
-      <p>${escapeHTML(STORE_CONFIG.bankDetails.bankName)} — ${escapeHTML(STORE_CONFIG.bankDetails.accountTitle)}</p>
-      <p>Account No: ${escapeHTML(STORE_CONFIG.bankDetails.accountNumber)}</p>
-      <p>IBAN: ${escapeHTML(STORE_CONFIG.bankDetails.iban)}</p>
-      <p class="checkout-bank-note">Amount: ${formatPKR(order.total)}</p>
-    </div>
+    <p>Our team will contact you by call or WhatsApp to confirm your order and share the payment details.</p>
   `;
 
   overlay.classList.add("is-open");

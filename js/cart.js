@@ -30,7 +30,7 @@ function addToCart(product) {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image || "",
+      image: product.image || product.card || (product.photos && product.photos[0]) || "",
       qty: 1
     });
   }
@@ -92,24 +92,45 @@ function closeCartDrawer() {
   document.body.style.overflow = "";
 }
 
+/* Brings saved basket lines up to date with the current catalogue
+   (photo, name and price). Lines for products that no longer exist are removed. */
+function refreshCartItems() {
+  if (typeof getAllProducts !== "function") return;
+  const cart = getCart();
+  if (cart.length === 0) return;
+  const all = getAllProducts();
+  const next = [];
+  let changed = false;
+  cart.forEach((item) => {
+    const p = all.find((x) => x.id === item.id);
+    if (!p) { changed = true; return; }
+    const image = p.image || p.card || (p.photos && p.photos[0]) || "";
+    const updated = { ...item, name: p.name, price: p.price, image };
+    if (JSON.stringify(updated) !== JSON.stringify(item)) changed = true;
+    next.push(updated);
+  });
+  if (changed) saveCart(next);
+}
+
 function renderCartDrawer() {
   const body = document.getElementById("cart-drawer-body");
   const footer = document.getElementById("cart-drawer-footer");
   if (!body || !footer) return;
 
+  refreshCartItems();
   const cart = getCart();
 
   if (cart.length === 0) {
-    body.innerHTML = `<p class="cart-empty">Your bag is empty. Browse the shop and add a few handmade favourites.</p>`;
+    body.innerHTML = `<p class="cart-empty">Your bag is empty. Browse the collection to find your favourite pieces.</p>`;
     footer.innerHTML = "";
     return;
   }
 
   body.innerHTML = cart.map((item) => `
     <div class="cart-line" data-id="${escapeHTML(item.id)}">
-      <div class="cart-line-photo" style="${item.image
-        ? `background-image:url('${escapeHTML(item.image)}');background-size:cover;background-position:center;`
-        : `background:linear-gradient(135deg,#E0A83E,#C0396B);`}"></div>
+      <div class="cart-line-photo"${item.image ? "" : ` style="background:linear-gradient(135deg,#E0A83E,#C0396B);"`}>${item.image
+        ? `<img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.name)}">`
+        : ""}</div>
       <div class="cart-line-info">
         <h4>${escapeHTML(item.name)}</h4>
         <p class="cart-line-price">${formatPKR(item.price)}</p>
@@ -129,7 +150,7 @@ function renderCartDrawer() {
       <span>Subtotal</span>
       <span>${formatPKR(subtotal)}</span>
     </div>
-    <p class="cart-note">Delivery charges are calculated at checkout.</p>
+    <p class="cart-note">Our team will contact you by call or WhatsApp to confirm your order. Payment details and delivery charges will be discussed at that time.</p>
     <button type="button" class="btn-primary cart-checkout-btn" id="go-to-checkout">Checkout</button>
   `;
 

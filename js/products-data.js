@@ -38,7 +38,7 @@ const SPREADS = [
   {
     id: "S-0001",
     name: "S-0001 Sunset Gingham",
-    desc: "A cheerful blend of warm terracotta, soft yellow, and muted green checks. The classic gingham rhythm gives this patchwork a cosy, timeless charm—like the warmth of a sunset settling into a garden",
+    desc: "A cheerful blend of warm terracotta, soft yellow and muted green checks. The classic gingham pattern gives this patchwork a cosy, timeless charm, like a sunset settling over a garden.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_101840.jpg",
@@ -47,7 +47,7 @@ const SPREADS = [
   {
     id: "S-0002",
     name: "S-0002 Gulrang",
-    desc: "A vibrant blend of traditional Ajrak-inspired prints and bold fuchsia, arranged in a timeless checkerboard pattern. The earthy heritage motifs meet bright pops of colour, creating a spread that feels rooted in tradition yet fresh and contemporary.",
+    desc: "A vibrant blend of traditional Ajrak-inspired prints and bold fuchsia, arranged in a checkerboard pattern. Earthy heritage motifs meet bright touches of colour, creating a spread that feels rooted in tradition yet fresh and contemporary.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_101952.jpg",
@@ -56,7 +56,7 @@ const SPREADS = [
   {
     id: "S-0003",
     name: "S-0003 Lilac Bloom",
-    desc: "A soft blend of lilac and white tones arranged in a classic Half-Square Triangle (HST) geometric pattern, creating interlocking diamond and pinwheel-like optical effects. Hand-quilted, reversible.",
+    desc: "A soft blend of lilac and white tones set in a classic Half-Square Triangle (HST) pattern, with interlocking diamond and pinwheel effects. Hand-quilted and reversible.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_101619.jpg",
@@ -65,7 +65,7 @@ const SPREADS = [
   {
     id: "S-0004",
     name: "S-0004 Hariyali",
-    desc: "A soothing blend of earthy sage-green and vintage floral prints, arranged in a timeless checkerboard pattern. Soft pink roses and delicate blue foliage bring a gentle cottage-garden charm, creating a spread that feels fresh, tranquil and naturally inviting.",
+    desc: "An earthy blend of sage green and vintage floral prints, arranged in a checkerboard pattern. Soft pink roses and delicate blue foliage bring a gentle cottage-garden charm, making the spread feel fresh, calm and welcoming.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_100209.jpg",
@@ -74,7 +74,7 @@ const SPREADS = [
   {
     id: "S-0005",
     name: "S-0005 Winter Berry",
-    desc: "A classic sashing design that pairs vibrant cherry-red checkered blocks with delicate botanical prints on crisp white strips. The structured grid creates a polished, timeless look with the warmth and charm of traditional patchwork.",
+    desc: "A classic sashing design that pairs cherry-red checked blocks with delicate botanical prints on crisp white strips. The structured grid gives a polished, timeless look with the warmth of traditional patchwork.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_101318.jpg",
@@ -83,7 +83,7 @@ const SPREADS = [
   {
     id: "S-0006",
     name: "S-0006 Bluebell",
-    desc: "A serene checkerboard of soft periwinkle blue and crisp white floral blocks. The delicate blue blossoms and cool tones create an airy, refreshing feel, bringing the calmness of a clear coastal morning into the home.",
+    desc: "A calm checkerboard of soft periwinkle blue and crisp white floral blocks. The delicate blue blossoms and cool tones create an airy, refreshing feel, like a clear coastal morning brought indoors.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_101122.jpg",
@@ -92,7 +92,7 @@ const SPREADS = [
   {
     id: "S-0007",
     name: "S-0007 Marigold",
-    desc: "Inspired by the warm glow of morning light, Marigold brings together soft yellow, crisp white and delicate vintage floral prints in an intricate geometric arrangement. Interlocking triangles create radiant star-like patterns, giving the spread a bright, cheerful and sun-kissed charm.",
+    desc: "Inspired by the warm glow of morning light, Marigold combines soft yellow, crisp white and delicate vintage floral prints in a geometric arrangement. Interlocking triangles form radiant, star-like patterns that give the spread a bright and cheerful charm.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_101453.jpg",
@@ -101,7 +101,7 @@ const SPREADS = [
   {
     id: "S-0008",
     name: "S-0008 Cotton Candy",
-    desc: "A playful mix of soft pink, cheerful marigold yellow and pale sky blue, arranged in a vibrant checkerboard rhythm. Sweet, nostalgic and full of colour, this cheerful patchwork brings a little candy-like joy to any room.",
+    desc: "A playful mix of soft pink, cheerful marigold yellow and pale sky blue, set in a lively checkerboard. Sweet and full of colour, this patchwork brings a little joy to any room.",
     price: 8000,
     tag: "SOLD",
     image: "images/20260809_100948.jpg",
@@ -110,7 +110,7 @@ const SPREADS = [
   {
     id: "S-0009",
     name: "S-0009 Starlit",
-    desc: "A charming monochromatic design inspired by a starlit night sky. Bold black stars scattered across a crisp white background create a playful yet modern look, making Starlit a lovely choice for a children's room or a cosy little corner at home.",
+    desc: "A charming monochrome design inspired by a starlit sky. Bold black stars scattered across a crisp white background give a playful yet modern look. Starlit is a lovely choice for a child's room or a cosy corner of the home.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_100819.jpg",
@@ -119,7 +119,7 @@ const SPREADS = [
   {
     id: "S-0010",
     name: "S-0010 Cherry Blossom Mist",
-    desc: "This lovely patchwork spread features a soft diagonal stripe layout that creates a continuous, flowing optical effect like cherry blossoms. The combination feels calm, graceful and subtly romantic, with a timeless charm.",
+    desc: "This patchwork spread features a soft diagonal stripe layout that creates a continuous, flowing effect, like cherry blossoms in the wind. The combination feels calm, graceful and subtly romantic.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_100344.jpg",
@@ -128,7 +128,7 @@ const SPREADS = [
   {
     id: "S-0011",
     name: "S-0011 Tango",
-    desc: "A lively play of vibrant kiwi green and earthy botanical brown, arranged in a dynamic chevron rhythm. Tango brings together fresh colour and grounded warmth in a bold, energetic pattern full of movement.",
+    desc: "A lively combination of vibrant kiwi green and earthy botanical brown, set in a dynamic chevron pattern. Tango brings fresh colour and grounded warmth together in a bold design full of movement.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_100601.jpg",
@@ -137,7 +137,7 @@ const SPREADS = [
   {
     id: "S-0012",
     name: "S-0012 Daisy",
-    desc: "Featuring a structured diamond sashing in a soft wheatish blend, this spread glows in luminous white accented by charming daisies. Its delicate floral motifs and luminous, airy tones bring the quiet, natural beauty of a sunlit meadow into the home.",
+    desc: "A structured diamond sashing in a soft wheat tone frames luminous white blocks, accented with charming daisies. The delicate floral motifs and airy tones bring the quiet beauty of a sunlit meadow into the home.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_095709.jpg",
@@ -146,7 +146,7 @@ const SPREADS = [
   {
     id: "S-0013",
     name: "S-0013 Kashikari",
-    desc: "Inspired by the timeless beauty of traditional Islamic tile art, Kashikari brings together deep royal blue, crisp white and intricate botanical prints in a symmetrical geometric arrangement. The repeating star-like forms and mosaic-inspired pattern create a sense of heritage, elegance and quiet grandeur.",
+    desc: "Inspired by the timeless beauty of traditional Islamic tile art, Kashikari combines deep royal blue, crisp white and intricate botanical prints in a symmetrical geometric pattern. The repeating star-like forms suggest heritage, elegance and quiet grandeur.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_095318.jpg",
@@ -155,7 +155,7 @@ const SPREADS = [
   {
     id: "S-0014",
     name: "S-0014 Rangoli",
-    desc: "Inspired by the vibrant beauty of traditional Rangoli, this joyful patchwork brings together radiant geometric shapes in deep fuchsia, rose pink, mint, lavender, peach and warm ochre. The repeating star-like patterns create a lively burst of colour and festive charm.",
+    desc: "Inspired by the vibrant tradition of Rangoli, this joyful patchwork combines geometric shapes in deep fuchsia, rose pink, mint, lavender, peach and warm ochre. The repeating star-like patterns create a lively burst of colour and festive charm.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_100038.jpg",
@@ -164,7 +164,7 @@ const SPREADS = [
   {
     id: "S-0015",
     name: "S-0015 Shinrin",
-    desc: "Inspired by the tranquil feeling of a deep green forest, Shinrin brings together rich teal-green tones with tropical botanical prints in earthy terracotta, soft peach and leafy greens. The repeating equilateral triangles create a sense of stars and diamonds dancing in a natural rhythm, like sunlight filtering through a quiet forest canopy.",
+    desc: "Inspired by the calm of a deep green forest, Shinrin combines rich teal-green tones with tropical botanical prints in earthy terracotta, soft peach and leafy greens. The repeating equilateral triangles suggest stars and diamonds moving in a natural rhythm, like sunlight through a quiet forest canopy.",
     price: 8500,
     tag: "SOLD",
     image: "images/20260809_102150.jpg",
@@ -189,7 +189,7 @@ const TABLECLOTH_THUMBNAIL = TABLECLOTH_FOLDER + "Thumbnail.JPG";
    codes     - design codes; each design has photos <code>a.jpg,
                <code>b.jpg, <code>c.jpg inside the style folder.
                The c photo is the design's card thumbnail.
-   All description text below is DUMMY placeholder text.
+   Each design's description is in TABLECLOTH_DESCRIPTIONS below.
    ============================================================ */
 const TABLECLOTH_STYLES = [
   {
@@ -197,29 +197,47 @@ const TABLECLOTH_STYLES = [
     name: "Patchwork",
     folder: "Patchwork Style",
     thumbnail: "Patchwork-thumbnail.jpg",
-    price: 5500,
-    description: "DUMMY: Patchwork tablecloths are pieced from many prints and colours in classic block patterns, stitched by hand.",
-    codes: ["TC03", "TC011", "TC012"]
+    price: 6000,
+    description: "A runner pieced in patchwork, with a matching border. Elegant and traditional, with a modern feel. Double layered for a better fall and fit, in high quality cotton fabric.",
+    codes: ["TC01", "TC02", "TC03"]
   },
   {
     id: "lacework",
     name: "Lacework",
     folder: "Lacework",
     thumbnail: "Lacework-thumbnail.jpg",
-    price: 4500,
-    description: "DUMMY: Lacework tablecloths are finished with soft lace edging and printed or plain fabrics for a delicate table.",
-    codes: ["TC02", "TC04", "TC05", "TC07", "TC09", "TC013", "TC014"]
+    price: 5000,
+    description: "A runner with lace and a lace border, in English style. Each design is slightly different. Double layered for a better fall and fit, in high quality cotton fabric.",
+    codes: ["TC04", "TC05", "TC06", "TC07", "TC08", "TC09", "TC10"]
   },
   {
     id: "dailywares",
     name: "Dailywares",
     folder: "Dailywares",
     thumbnail: "Dailywares-thumbnail.jpg",
-    price: 3500,
-    description: "DUMMY: Dailywares tablecloths are practical everyday pieces in gingham and simple prints, easy to wash and use.",
-    codes: ["TC01", "TC06", "TC08", "TC010"]
+    price: 4000,
+    description: "Simple checked prints for a countryside feel and bright colour. Double layered for a better fall and fit, in high quality cotton fabric.",
+    codes: ["TC11", "TC12", "TC13", "TC14"]
   }
 ];
+
+/* Design descriptions, keyed by design code. Written for each photo. */
+const TABLECLOTH_DESCRIPTIONS = {
+  TC01: "A runner pieced in deep purple and light blue, with a matching border. Traditional, with a clean modern look. Double layered for a better fall and fit on the table.",
+  TC02: "A runner of plum and olive triangles, with a matching border. A traditional pattern in a bold colour pairing. Double layered for a better fall and fit on the table.",
+  TC03: "A runner of pink gingham and grey diamonds, with a matching border. Traditional patchwork with a fresh look. Double layered for a better fall and fit on the table.",
+  TC04: "A runner with white lace stripes on mustard, a teal ribbon down the centre, and lace along the border. English style and simple. Double layered for a better fall and fit on the table.",
+  TC05: "A runner in sage green with a small pink and brown flower print, edged with lace. Double layered for a better fall and fit on the table.",
+  TC06: "A runner of cream panels with white lace and small embroidered flowers, framed with lace. Double layered for a better fall and fit on the table.",
+  TC07: "A runner in navy and white check with small white daisies, edged with white lace. Classic English style. Double layered for a better fall and fit on the table.",
+  TC08: "A runner printed with small holly sprigs and berries on white, edged with lace. A simple festive look. Double layered for a better fall and fit on the table.",
+  TC09: "A runner with tiny purple and pink flowers on white, edged with lace. Soft and suited to everyday use. Double layered for a better fall and fit on the table.",
+  TC10: "A runner with a black and white geometric print, edged with lace. Crisp and unfussy. Double layered for a better fall and fit on the table.",
+  TC11: "Simple sage and white checks for a countryside feel. Double layered for a better fall and fit on the table.",
+  TC12: "Bright mustard and white checks with a countryside feel. Double layered for a better fall and fit on the table.",
+  TC13: "Soft taupe and white checks for a simple countryside look. Double layered for a better fall and fit on the table.",
+  TC14: "Peach and white checks with a cheerful countryside feel. Double layered for a better fall and fit on the table."
+};
 
 /* Builds one entry per design code. Each design can still be changed
    by hand: set its own price, tag ("AVAILABLE" / "SOLD" / other),
@@ -231,14 +249,13 @@ TABLECLOTH_STYLES.forEach((style) => {
     TABLECLOTH_DESIGNS.push({
       id: "DS-" + code,
       code: code,
-      name: style.name + " — " + code,
+      name: code,
       style: style.id,
       price: style.price,
-      tag: "AVAILABLE",
-      description: "DUMMY: A hand-pieced design from our Volume 2 tablecloth collection, stitched patch by patch for everyday meals and festive dinners.",
+      tag: code === "TC12" ? "SOLD" : "AVAILABLE",
+      description: TABLECLOTH_DESCRIPTIONS[code] || "",
       dimensions: [
-        { size: "4-seater square", measure: "DUMMY 60 × 60 in" },
-        { size: "6-seater rectangle", measure: "DUMMY 60 × 108 in" }
+        { size: "Size", measure: "DUMMY 60 × 108 in" }
       ],
       careInstructions: "DUMMY: Hand wash in cold water with mild soap. Dry in shade and iron on low heat.",
       photos: photos,
@@ -260,7 +277,7 @@ const ACCESSORIES = [
     id: "A-001",
     name: "A-001 Patchwork Coaster Set (4)",
     category: "Coasters",
-    desc: "A set of four hand-pieced coasters in mixed scrap fabrics — quilted, quick-drying, and generously sized for mugs and teapots alike.",
+    desc: "A set of four hand-pieced coasters in high quality cotton fabrics — quilted, quick-drying, and generously sized for mugs and teapots alike.",
     price: 2200,
     tag: "COMING SOON",
     image: "",
@@ -306,7 +323,7 @@ const ACCESSORIES = [
     id: "A-006",
     name: "A-006 Patchwork Pot Holder",
     category: "Pot Holders",
-    desc: "A double-layered, heat-resistant pot holder pieced from mixed scraps — as sturdy as it is pretty.",
+    desc: "A double-layered, heat-resistant pot holder in high quality cotton fabric — as sturdy as it is pretty.",
     price: 1200,
     tag: "COMING SOON",
     image: "",
@@ -346,7 +363,7 @@ const BREAD_CLOTH_THUMBNAIL = BREAD_CLOTH_FOLDER + "Mix.JPG";
 
 /* One description shared by all bread cloths (they are all the same
    construction; only the print differs). Shown once, in the popup. */
-const BREAD_CLOTH_DESCRIPTION = "A simple, good quality sewn cloth. Use it to keep rotis warm off the tawa, or line your bread basket on the dining table.";
+const BREAD_CLOTH_DESCRIPTION = "A simple, good quality cloth. Use it to keep rotis warm off the tawa, or to line your bread basket on the dining table.";
 
 const BREAD_CLOTHS = [
   { id: "A-009", colour: "Blue",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"], photos: ["Blue1.JPG", "Blue2.JPG"] },
@@ -359,9 +376,9 @@ BREAD_CLOTHS.forEach((b) => {
   const images = b.photos.map(file => BREAD_CLOTH_FOLDER + encodeURI(file));
   ACCESSORIES.push({
     id: b.id,
-    name: "Bread Cloth — " + b.colour,
+    name: "Bread Cloth: " + b.colour,
     category: "Bread Cloths",
-    desc: "A simple, good quality sewn cloth. Use it to keep rotis warm off the tawa, or line your bread basket on the dining table.",
+    desc: "A simple, good quality cloth. Use it to keep rotis warm off the tawa, or to line your bread basket on the dining table.",
     price: 250,
     tag: "AVAILABLE",
     image: images[0],
@@ -380,7 +397,7 @@ const TEA_COZY_FOLDER = "images/V2-TeaCozies/";
 const TEA_COZY_THUMBNAIL = TEA_COZY_FOLDER + "Thumbnail.JPG";
 
 /* One description shared by all tea cozies. Shown once, in the popup. */
-const TEA_COZY_DESCRIPTION = "A quilted cozy for every tea break — keeps your tea warm, in pretty floral and printed fabrics.";
+const TEA_COZY_DESCRIPTION = "A quilted tea cozy for every tea break. It keeps your tea warm and comes in pretty floral and printed fabrics.";
 
 /* Price is a placeholder (same as the old A-005 tea cozy) — set yours. */
 const TEA_COZIES = [
@@ -392,7 +409,7 @@ TEA_COZIES.forEach((t) => {
   const images = t.photos.map(file => TEA_COZY_FOLDER + encodeURI(file));
   ACCESSORIES.push({
     id: t.id,
-    name: "Tea Cozy — " + t.design,
+    name: "Tea Cozy: " + t.design,
     category: "Tea Cozies",
     desc: TEA_COZY_DESCRIPTION,
     price: 500,
@@ -414,7 +431,7 @@ const POT_HOLDER_THUMBNAIL = POT_HOLDER_FOLDER + "Thumbnail.JPG";
 
 /* One description shared by all pot holders (same construction;
    only the fabric differs). Shown once, in the popup. */
-const POT_HOLDER_DESCRIPTION = "A double-layered, heat-resistant pinch pot holder pieced from mixed scraps — as sturdy as it is pretty.";
+const POT_HOLDER_DESCRIPTION = "A double-layered, heat-resistant pinch pot holder in high quality cotton fabric. It is as sturdy as it is pretty.";
 
 /* Edit the design names if you want to label them differently.
    Price is a placeholder (same as the old A-006 pot holder) — set yours. */
@@ -436,7 +453,7 @@ POT_HOLDERS.forEach((h) => {
   const images = h.photos.map(file => POT_HOLDER_FOLDER + encodeURI(file));
   ACCESSORIES.push({
     id: h.id,
-    name: "Pot Holder — " + h.design,
+    name: "Pot Holder: " + h.design,
     category: "Pot Holders",
     desc: POT_HOLDER_DESCRIPTION,
     price: 1200,
@@ -481,10 +498,13 @@ const EVENT_GALLERY = [
    ============================================================ */
 const KIDS_DASTERKHWAN_FOLDER = "images/V2-KidsDasterkhwan/";
 const KIDS_DASTERKHWAN_THUMBNAIL = KIDS_DASTERKHWAN_FOLDER + "Thumbnail.JPG";
+
+/* Shown on the collection card. */
+const KIDS_DASTERKHWAN_DESCRIPTION = "Bright colours and fun prints for little ones eating together with friends and cousins, at home or on a picnic. Three designs in high quality cotton fabric.";
 const KIDS_DASTERKHWANS = [
-  { id: "KD-001", name: "Kids Dasterkhwan — Design 1", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D1b.JPG", photos: ["D1a.JPG", "D1b.JPG", "D1c.JPG"] },
-  { id: "KD-002", name: "Kids Dasterkhwan — Design 2", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D2b.JPG", photos: ["D2a.JPG", "D2b.JPG", "D2c.JPG"] },
-  { id: "KD-003", name: "Kids Dasterkhwan — Design 3", desc: "A hand-pieced dasterkhwan for little ones, stitched patch by patch for everyday meals and snack time.", price: 4500, tag: "AVAILABLE", thumbnail: "D3b.JPG", photos: ["D3a.JPG", "D3b.JPG", "D3c.JPG"] }
+  { id: "KD-001", name: "Kids Dasterkhwan: Design 1", desc: "A white cotton dasterkhwan printed with bright tomatoes in red, orange, yellow and green, with a mustard border. Cheerful colours for little ones sharing a meal with friends and cousins, at home or on a picnic.", price: 4500, tag: "AVAILABLE", thumbnail: "D1b.JPG", photos: ["D1a.JPG", "D1b.JPG", "D1c.JPG"] },
+  { id: "KD-002", name: "Kids Dasterkhwan: Design 2", desc: "A soft pink cotton dasterkhwan printed with fried eggs, with a white lace border. A playful print that makes breakfast and snack time fun for the kids.", price: 4500, tag: "AVAILABLE", thumbnail: "D2b.JPG", photos: ["D2a.JPG", "D2b.JPG", "D2c.JPG"] },
+  { id: "KD-003", name: "Kids Dasterkhwan: Design 3", desc: "A white cotton dasterkhwan printed with cakes and tarts in pink, red, green and yellow, with a coral border. Sweet colours for afternoon snacks and picnics with the cousins.", price: 4500, tag: "AVAILABLE", thumbnail: "D3b.JPG", photos: ["D3a.JPG", "D3b.JPG", "D3c.JPG"] }
 ];
 
 KIDS_DASTERKHWANS.forEach((k) => {

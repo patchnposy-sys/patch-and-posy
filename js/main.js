@@ -4,6 +4,20 @@
  * wires up the mobile menu, newsletter form, cart, and checkout.
  */
 
+/* Photo file extensions can be .jpg or .JPG (servers are case-sensitive).
+   If a photo fails to load, try the other spelling once. */
+document.addEventListener("error", (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || img.dataset.extTried) return;
+  const src = img.getAttribute("src") || "";
+  let alt = null;
+  if (src.endsWith(".jpg")) alt = src.slice(0, -4) + ".JPG";
+  else if (src.endsWith(".JPG")) alt = src.slice(0, -4) + ".jpg";
+  if (!alt) return;
+  img.dataset.extTried = "1";
+  img.src = alt;
+}, true);
+
 document.addEventListener("DOMContentLoaded", () => {
   // Spreads now live in the Patchwork Spreads popup (see initSpreadsModal).
   // Daily Wear is hidden for now.
@@ -27,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof initCheckout === "function") initCheckout();
 
   attachAddToBagHandlers();
-  attachWhatsAppHandlers();
   applyLiveProductStatuses();
 });
 
@@ -47,14 +60,19 @@ function isLiveAvailable(p) {
 
 function buyActionsHTML(id, available, addLabel) {
   const safeId = escapeHTML(id);
-  const label = escapeHTML(addLabel || "Add to basket");
+  const label = escapeHTML(addLabel || "Add to bag");
   if (available) {
     return `<div class="patch-actions" data-actions-for="${safeId}">
          <button type="button" class="btn-add-bag" data-product-id="${safeId}">${label}</button>
-         <button type="button" class="btn-whatsapp" data-product-id="${safeId}">Order via WhatsApp</button>
        </div>`;
   }
   return `<span class="btn-add-bag btn-add-bag-disabled" data-unavail-for="${safeId}" data-add-label="${label}">Not available yet</span>`;
+}
+
+/* Design tile: price with AVAILABLE / SOLD tag (used in popup lists) */
+function tileRowHTML(p) {
+  const available = isLiveAvailable(p);
+  return `<span class="tc-tile-row"><span class="tc-tile-price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</span><span class="tc-tag${available ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(p.id)}">${escapeHTML(p.tag || "")}</span></span>`;
 }
 
 /* AVAILABLE / SOLD badge for a single item (used inside popups and detail pages) */
@@ -63,14 +81,6 @@ function tileStatusHTML(p) {
   return `<span class="tc-tag${available ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(p.id)}">${escapeHTML(p.tag || "")}</span>`;
 }
 
-/* "2 of 4 available" for a category (key = category name) or a tablecloth style (key = "style:<id>") */
-function countTextFor(key) {
-  const items = key.startsWith("style:")
-    ? tableclothDesigns(key.slice("style:".length))
-    : getAllProducts().filter((p) => p.category === key);
-  const available = items.filter(isLiveAvailable).length;
-  return `${available} of ${items.length} available`;
-}
 
 function productCardHTML(product) {
   const isAvailable = isLiveAvailable(product);
@@ -83,7 +93,7 @@ function productCardHTML(product) {
     ? `background-image:url('${escapeHTML(product.image)}'); background-size:cover; background-position:center;`
     : `background: linear-gradient(135deg, ${(product.swatch || ["#E0A83E", "#C0396B"]).join(", ")});`;
 
-  const actionHTML = buyActionsHTML(product.id, isAvailable, "Add to Bag");
+  const actionHTML = buyActionsHTML(product.id, isAvailable, "Add to bag");
 
   const sizeHTML = product.size
     ? `<p class="size-line">${escapeHTML(product.size)}</p>`
@@ -138,7 +148,6 @@ function renderAccessories(products) {
     contentEl.innerHTML = `<div class="patch-grid">${cards}</div>`;
 
     attachAddToBagHandlers();
-    attachWhatsAppHandlers();
     applyLiveProductStatuses();
   }
 
@@ -218,8 +227,7 @@ function breadThumbnailHTML() {
       <div class="patch-photo" style="background-image:url('${escapeHTML(BREAD_CLOTH_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
       <div class="patch-info">
         <h3>Bread Cloths</h3>
-        <p class="size-line tc-count" data-count-for="Bread Cloths">${countTextFor("Bread Cloths")}</p>
-        <p class="desc">Four colours. Tap to see the designs and add to basket.</p>
+        <p class="desc">Four colours. Tap to view the designs and add them to your bag.</p>
         <button type="button" class="btn-add-bag bread-open">View colours</button>
       </div>
     </div>`;
@@ -256,7 +264,7 @@ function showBreadColours() {
       ${breadProducts().map(p => `
         <button type="button" class="bread-colour" data-colour-id="${escapeHTML(p.id)}">
           <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
-          <span>${escapeHTML(p.name.replace("Bread Cloth — ", ""))}</span>${tileStatusHTML(p)}
+          <span>${escapeHTML(p.name.replace("Bread Cloth: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
 
@@ -275,16 +283,15 @@ function showBreadDetail(id) {
   body.innerHTML = `
     <button type="button" class="bread-back" id="bread-back">← All colours</button>
     <h3 class="bread-title">${escapeHTML(p.name)}</h3>
-    <div class="bread-photos">
-      ${photos.map(src => `<img src="${escapeHTML(src)}" alt="${escapeHTML(p.name)}" loading="lazy">`).join("")}
+    <div class="bread-photos tc-zoom">
+      ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to basket")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
 
   document.getElementById("bread-back").addEventListener("click", showBreadColours);
   attachAddToBagHandlers();
-  attachWhatsAppHandlers();
   applyLiveProductStatuses();
 }
 
@@ -324,40 +331,9 @@ function attachAddToBagHandlers() {
   });
 }
 
-/* ---------- "Order via WhatsApp" ---------- */
-function attachWhatsAppHandlers() {
-  const allProducts = getAllProducts();
-
-  document.querySelectorAll(".btn-whatsapp[data-product-id]").forEach((btn) => {
-    if (btn.dataset.bound === "true") return;
-    btn.dataset.bound = "true";
-    btn.addEventListener("click", () => {
-      const product = allProducts.find((p) => p.id === btn.dataset.productId);
-      if (!product) return;
-      openWhatsAppOrder(product);
-      markProductSold(product.id);
-    });
-  });
-}
-
-function openWhatsAppOrder(product) {
-  const number = (typeof STORE_CONFIG !== "undefined" && STORE_CONFIG.whatsappNumber) || "";
-  const imageUrl = product.image ? `${window.location.origin}/${product.image}` : "";
-
-  const lines = [
-    "Hi Patch & Posy! I want to place this order. I want to order this item.",
-    "",
-    product.name,
-    imageUrl ? `Photo: ${imageUrl}` : ""
-  ].filter(Boolean);
-
-  const message = encodeURIComponent(lines.join("\n"));
-  window.open(`https://wa.me/${number}?text=${message}`, "_blank");
-}
-
 /* ---------- Live product status (Firestore-backed) ----------
    Lets a product's AVAILABLE/SOLD status update in real time the moment
-   an order is placed (via WhatsApp or the website checkout) and be
+   an order is placed (via the website checkout) and be
    managed from the dashboard — without needing a code change + redeploy
    every time a one-of-a-kind piece sells. */
 const LOCAL_SOLD_KEY = "patchAndPosyLocallySold";
@@ -401,7 +377,9 @@ function loadLiveData() {
 
       getAllProducts().forEach((p) => {
         if (liveStatusById[p.id]) p.tag = liveStatusById[p.id];
-        if (livePriceById[p.id]) p.price = livePriceById[p.id];
+        // Tablecloth prices come only from products-data.js (style prices).
+        const isTablecloth = String(p.id).startsWith("DS-");
+        if (livePriceById[p.id] && !isTablecloth) p.price = livePriceById[p.id];
       });
     })();
   }
@@ -414,7 +392,6 @@ async function applyLiveProductStatuses() {
     setCardStatus(p.id, p.tag);
     setPriceFor(p.id, p.price);
   });
-  updateCountsFor();
 }
 
 function setCardStatus(productId, status) {
@@ -436,13 +413,12 @@ function setCardStatus(productId, status) {
       el.outerHTML = buyActionsHTML(productId, true, el.dataset.addLabel);
     });
     attachAddToBagHandlers();
-    attachWhatsAppHandlers();
     return;
   }
 
   // SOLD (or any other non-available status): hide the buy buttons.
   document.querySelectorAll(`[data-actions-for="${id}"]`).forEach((el) => {
-    const label = el.querySelector(".btn-add-bag")?.textContent || "Add to basket";
+    const label = el.querySelector(".btn-add-bag")?.textContent || "Add to bag";
     el.outerHTML = buyActionsHTML(productId, false, label);
   });
 }
@@ -453,11 +429,6 @@ function setPriceFor(productId, price) {
   });
 }
 
-function updateCountsFor() {
-  document.querySelectorAll("[data-count-for]").forEach((el) => {
-    el.textContent = countTextFor(el.dataset.countFor);
-  });
-}
 
 function cssEscape(value) {
   return String(value).replace(/["\\]/g, "\\$&");
@@ -469,7 +440,6 @@ async function markProductSold(productId) {
   liveStatusById[productId] = "SOLD";
   getAllProducts().forEach((p) => { if (p.id === productId) p.tag = "SOLD"; });
   setCardStatus(productId, "SOLD");
-  updateCountsFor();
 
   const localSold = JSON.parse(localStorage.getItem(LOCAL_SOLD_KEY) || "[]");
   if (!localSold.includes(productId)) {
@@ -531,7 +501,7 @@ function initNewsletterForm() {
     // TODO: connect this to your actual mailing-list provider
     // (Mailchimp, Klaviyo, a serverless function, etc). For now this
     // just confirms the input looks right and resets the field.
-    showNote("Thank you — you're on the list!", "success");
+    showNote("Thank you. You are now subscribed.", "success");
     form.reset();
   });
 
@@ -559,8 +529,7 @@ function potThumbnailHTML() {
       <div class="patch-photo" style="background-image:url('${escapeHTML(POT_HOLDER_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
       <div class="patch-info">
         <h3>Pot Holders</h3>
-        <p class="size-line tc-count" data-count-for="Pot Holders">${countTextFor("Pot Holders")}</p>
-        <p class="desc">Eleven designs. Tap to see them and add to basket.</p>
+        <p class="desc">Eleven designs. Tap to view them and add them to your bag.</p>
         <button type="button" class="btn-add-bag pot-open">View designs</button>
       </div>
     </div>`;
@@ -597,7 +566,7 @@ function showPotDesigns() {
       ${potProducts().map(p => `
         <button type="button" class="bread-colour" data-pot-id="${escapeHTML(p.id)}">
           <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
-          <span>${escapeHTML(p.name.replace("Pot Holder — ", ""))}</span>${tileStatusHTML(p)}
+          <span>${escapeHTML(p.name.replace("Pot Holder: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
 
@@ -616,16 +585,15 @@ function showPotDetail(id) {
   body.innerHTML = `
     <button type="button" class="bread-back" id="pot-back">← All designs</button>
     <h3 class="bread-title">${escapeHTML(p.name)}</h3>
-    <div class="bread-photos">
-      ${photos.map(src => `<img src="${escapeHTML(src)}" alt="${escapeHTML(p.name)}" loading="lazy">`).join("")}
+    <div class="bread-photos tc-zoom">
+      ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to basket")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
 
   document.getElementById("pot-back").addEventListener("click", showPotDesigns);
   attachAddToBagHandlers();
-  attachWhatsAppHandlers();
   applyLiveProductStatuses();
 }
 
@@ -654,8 +622,7 @@ function teaThumbnailHTML() {
       <div class="patch-photo">${imgTag(TEA_COZY_THUMBNAIL, "Tea cozies", "fill")}</div>
       <div class="patch-info">
         <h3>Tea Cozies</h3>
-        <p class="size-line tc-count" data-count-for="Tea Cozies">${countTextFor("Tea Cozies")}</p>
-        <p class="desc">Two designs. Tap to see them and add to basket.</p>
+        <p class="desc">Two designs. Tap to view them and add them to your bag.</p>
         <button type="button" class="btn-add-bag tea-open">View designs</button>
       </div>
     </div>`;
@@ -692,7 +659,7 @@ function showTeaDesigns() {
       ${teaProducts().map(p => `
         <button type="button" class="bread-colour" data-tea-id="${escapeHTML(p.id)}">
           ${imgTag(p.image, p.name)}
-          <span>${escapeHTML(p.name.replace("Tea Cozy — ", ""))}</span>${tileStatusHTML(p)}
+          <span>${escapeHTML(p.name.replace("Tea Cozy: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
 
@@ -711,16 +678,15 @@ function showTeaDetail(id) {
   body.innerHTML = `
     <button type="button" class="bread-back" id="tea-back">← All designs</button>
     <h3 class="bread-title">${escapeHTML(p.name)}</h3>
-    <div class="bread-photos">
+    <div class="bread-photos tc-zoom">
       ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to basket")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
 
   document.getElementById("tea-back").addEventListener("click", showTeaDesigns);
   attachAddToBagHandlers();
-  attachWhatsAppHandlers();
   applyLiveProductStatuses();
 }
 
@@ -797,6 +763,12 @@ function closeTableclothModal() {
   document.body.style.overflow = "";
 }
 
+/* "From" price on a style card = the lowest price of its designs, so it always matches the design list */
+function styleLowestPrice(style) {
+  const prices = tableclothDesigns(style.id).map(d => d.price).filter(p => p > 0);
+  return prices.length ? Math.min(...prices) : style.price;
+}
+
 /* Step 1: the three style cards (Patchwork, Lacework, Dailywares) */
 function showTableclothStyles() {
   const body = document.getElementById("tablecloth-body");
@@ -810,7 +782,7 @@ function showTableclothStyles() {
           <span class="tc-style-photo">${imgTag(TABLECLOTH_FOLDER + encodeURI(s.thumbnail), s.name, "fill")}</span>
           <span class="tc-style-name">${escapeHTML(s.name)}</span>
           <span class="tc-style-desc">${escapeHTML(s.description)}</span>
-          <span class="tc-style-meta"><span data-count-for="style:${escapeHTML(s.id)}">${countTextFor("style:" + s.id)}</span> · from ${formatPKR(s.price)}</span>
+          <span class="tc-style-meta">From ${formatPKR(styleLowestPrice(s))}</span>
         </button>`).join("")}
     </div>`;
 
@@ -858,7 +830,7 @@ function showTableclothDetail(id) {
   const dimsHTML = (d.dimensions || []).map(x => `
     <li><span>${escapeHTML(x.size)}</span><span>${escapeHTML(x.measure)}</span></li>`).join("");
 
-  const buyHTML = `<div class="bread-buy" data-product-id="${escapeHTML(d.id)}">${buyActionsHTML(d.id, available, "Add to basket")}</div>`;
+  const buyHTML = `<div class="bread-buy" data-product-id="${escapeHTML(d.id)}">${buyActionsHTML(d.id, available, "Add to bag")}</div>`;
 
   body.innerHTML = `
     <button type="button" class="bread-back" id="tc-back-designs">← Back to ${escapeHTML(style ? style.name : "designs")}</button>
@@ -889,7 +861,6 @@ function showTableclothDetail(id) {
 
   document.getElementById("tc-back-designs").addEventListener("click", () => showTableclothDesigns(d.style));
   attachAddToBagHandlers();
-  attachWhatsAppHandlers();
   applyLiveProductStatuses();
 }
 
@@ -989,8 +960,7 @@ function kidsThumbnailHTML() {
       <div class="patch-photo">${imgTag(KIDS_DASTERKHWAN_THUMBNAIL, "Kids Dasterkhwan", "fill")}</div>
       <div class="patch-info">
         <h3>Kids Dasterkhwan</h3>
-        <p class="size-line tc-count" data-count-for="Kids Dasterkhwan">${countTextFor("Kids Dasterkhwan")}</p>
-        <p class="desc">Three designs. Tap to see them and add to basket.</p>
+        <p class="desc">${escapeHTML(KIDS_DASTERKHWAN_DESCRIPTION)}</p>
         <button type="button" class="btn-add-bag kd-open">View designs</button>
       </div>
     </div>`;
@@ -1028,7 +998,7 @@ function showKidsDesigns() {
       ${kidsProducts().map(p => `
         <button type="button" class="bread-colour" data-kd-id="${escapeHTML(p.id)}">
           ${imgTag(p.image, p.name)}
-          <span>${escapeHTML(p.name.replace("Kids Dasterkhwan — ", ""))}</span>${tileStatusHTML(p)}
+          <span>${escapeHTML(p.name.replace("Kids Dasterkhwan: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
 
@@ -1047,17 +1017,16 @@ function showKidsDetail(id) {
   body.innerHTML = `
     <button type="button" class="bread-back" id="kd-back">← All designs</button>
     <h3 class="bread-title">${escapeHTML(p.name)}</h3>
-    <div class="bread-photos">
+    <div class="bread-photos tc-zoom">
       ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="bread-description">${escapeHTML(p.desc)}</p>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to basket")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
 
   document.getElementById("kd-back").addEventListener("click", showKidsDesigns);
   attachAddToBagHandlers();
-  attachWhatsAppHandlers();
   applyLiveProductStatuses();
 }
 

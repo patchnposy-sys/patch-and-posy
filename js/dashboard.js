@@ -16,12 +16,14 @@ let allOrders = [];
 /* Saved values from Firestore */
 let liveProductStatuses = {};   // productId -> "AVAILABLE" | "SOLD"
 let liveProductPrices = {};     // productId -> number (rupees)
+let liveProductDetails = {};    // productId -> { description, dimensions, care } as saved
 
 /* Staged (not yet saved) changes */
 let pendingOrderStatus = {};    // orderId -> status
 let pendingProductStatus = {};  // productId -> "AVAILABLE" | "SOLD"
 let pendingPrices = {};         // productId -> number
 let invalidPriceIds = new Set();
+let pendingDetails = {};        // productId -> { description?, dimensions?, care? }
 
 document.addEventListener("DOMContentLoaded", () => {
   const fb = initFirebase();
@@ -107,7 +109,7 @@ function initTabs() {
       tab.classList.add("is-active");
       document.getElementById(`panel-${tab.dataset.tab}`).classList.add("is-active");
       if (tab.dataset.tab === "clients") renderClients();
-      if (tab.dataset.tab === "products" || tab.dataset.tab === "prices") loadProductStatuses();
+      if (tab.dataset.tab === "products" || tab.dataset.tab === "prices" || tab.dataset.tab === "details") loadProductStatuses();
       if (tab.dataset.tab === "local") renderLocalOrders();
     });
   });
@@ -326,6 +328,116 @@ async function syncLocalOrder(index) {
   }
 }
 
+/* ---------- Details tab: description, dimensions, care (live from Firestore) ---------- */
+/* Products that have a Details box: tablecloth designs and the accessory kinds */
+function getDetailProducts() {
+  return [
+    ...(typeof TABLECLOTH_DESIGNS !== "undefined" ? TABLECLOTH_DESIGNS : []),
+    ...(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : [])
+  ];
+}
+
+/* What the website shows when nothing is saved for a product */
+function defaultDetailsOf(p) {
+  return {
+    description: p.description || p.desc || "",
+    dimensions: typeof p.dimensions === "string" ? p.dimensions : "",
+    care: p.careInstructions || ""
+  };
+}
+
+/* What the website shows now: the saved text if there is one, otherwise the default */
+function currentDetailsOf(p) {
+  const saved = liveProductDetails[p.id] || {};
+  const def = defaultDetailsOf(p);
+  const pick = (value, fallback) => (typeof value === "string" ? value : fallback);
+  return {
+    description: pick(saved.description, def.description),
+    dimensions: pick(saved.dimensions, def.dimensions),
+    care: pick(saved.care, def.care)
+  };
+}
+
+async function loadProductDetails() {
+  const fb = initFirebase();
+  if (fb && fb.db) {
+    try {
+      const snap = await fb.db.collection("productDetails").get();
+      liveProductDetails = {};
+      snap.docs.forEach((doc) => { liveProductDetails[doc.id] = doc.data(); });
+    } catch (err) {
+      console.error("Failed to load product details:", err);
+      document.getElementById("details-table-body").innerHTML = `<tr><td colspan="5" class="dash-empty">Couldn't load details. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
+      return;
+    }
+  }
+  renderDetailsTable();
+}
+
+function renderDetailsTable() {
+  const tbody = document.getElementById("details-table-body");
+  if (!tbody) return;
+
+  const products = getDetailProducts();
+  if (products.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
+    return;
+  }
+
+  const groups = new Map();
+  products.forEach((p) => {
+    const key = productGroup(p);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  });
+
+  let html = "";
+  groups.forEach((items, name) => {
+    html += `<tr class="dash-group-row"><th colspan="5">${escapeHTML(name)}</th></tr>`;
+    html += items.map(detailRowHTML).join("");
+  });
+  tbody.innerHTML = html;
+
+  tbody.querySelectorAll("[data-detail-id]").forEach((field) => {
+    field.addEventListener("input", () => setPendingDetail(field));
+  });
+}
+
+function detailRowHTML(p) {
+  const pending = pendingDetails[p.id] || {};
+  const shown = currentDetailsOf(p);
+  const valueOf = (field) => (pending[field] !== undefined ? pending[field] : shown[field]);
+  const changed = Object.keys(pending).length > 0;
+  return `
+    <tr class="${changed ? "dash-row-changed" : ""}">
+      <td>${escapeHTML(p.id)}</td>
+      <td>${escapeHTML(p.name)}</td>
+      <td><textarea class="dash-detail-input" rows="3" data-detail-id="${escapeHTML(p.id)}" data-field="description">${escapeHTML(valueOf("description"))}</textarea></td>
+      <td><input type="text" class="dash-detail-input" data-detail-id="${escapeHTML(p.id)}" data-field="dimensions" value="${escapeHTML(valueOf("dimensions"))}" placeholder="e.g. 60 × 108 in"></td>
+      <td><textarea class="dash-detail-input" rows="3" data-detail-id="${escapeHTML(p.id)}" data-field="care">${escapeHTML(valueOf("care"))}</textarea></td>
+    </tr>`;
+}
+
+/* Reads one Details box. Only text that differs from what the website shows is kept. */
+function setPendingDetail(field) {
+  const id = field.dataset.detailId;
+  const name = field.dataset.field;
+  const p = findProduct(id);
+  if (!p) return;
+
+  const value = field.value.trim();
+  pendingDetails[id] = pendingDetails[id] || {};
+  if (value === currentDetailsOf(p)[name]) {
+    delete pendingDetails[id][name];
+    if (Object.keys(pendingDetails[id]).length === 0) delete pendingDetails[id];
+  } else {
+    pendingDetails[id][name] = value;
+  }
+
+  field.closest("tr").classList.toggle("dash-row-changed", !!pendingDetails[id]);
+  updateSaveBar();
+}
+
 /* ---------- Products + Prices (live from Firestore) ---------- */
 function getCatalogProducts() {
   // Order: Tablecloths (Volume 2), Accessories (Volume 2), Spreads (Volume 1)
@@ -372,6 +484,7 @@ function groupedProducts() {
 
 /* Loads the saved statuses and prices, then draws both tabs */
 async function loadProductStatuses() {
+  await loadProductDetails();
   const fb = initFirebase();
   if (fb && fb.db) {
     try {
@@ -547,11 +660,22 @@ function collectChanges() {
     .map(([id, price]) => ({ id, price, product: findProduct(id) }))
     .filter(c => c.product && livePriceOf(c.product) !== c.price);
 
-  return { orders, products, prices, invalid: invalidPriceIds.size };
+  const details = Object.entries(pendingDetails)
+    .map(([id, fields]) => {
+      const product = findProduct(id);
+      if (!product) return null;
+      const current = currentDetailsOf(product);
+      const changedFields = Object.keys(fields).filter(f => fields[f] !== current[f]);
+      if (changedFields.length === 0) return null;
+      return { id, product, values: { ...current, ...fields } };
+    })
+    .filter(Boolean);
+
+  return { orders, products, prices, details, invalid: invalidPriceIds.size };
 }
 
 function changeCount(changes) {
-  return changes.orders.length + changes.products.length + changes.prices.length;
+  return changes.orders.length + changes.products.length + changes.prices.length + changes.details.length;
 }
 
 function hasUnsavedChanges() {
@@ -592,11 +716,13 @@ function cancelChanges() {
   pendingOrderStatus = {};
   pendingProductStatus = {};
   pendingPrices = {};
+  pendingDetails = {};
   invalidPriceIds.clear();
 
   renderOrdersTable();
   renderProductsTable();
   renderPricesTable();
+  renderDetailsTable();
   updateSaveBar();
 }
 
@@ -614,6 +740,7 @@ async function saveChanges() {
   if (changes.orders.length) parts.push(`${changes.orders.length} order status change${changes.orders.length === 1 ? "" : "s"}`);
   if (changes.products.length) parts.push(`${changes.products.length} product status change${changes.products.length === 1 ? "" : "s"}`);
   if (changes.prices.length) parts.push(`${changes.prices.length} price change${changes.prices.length === 1 ? "" : "s"}`);
+  if (changes.details.length) parts.push(`${changes.details.length} details change${changes.details.length === 1 ? "" : "s"}`);
 
   const willEmail = changes.orders.some((c) => typeof ORDER_STATUS_EMAILS !== "undefined" && ORDER_STATUS_EMAILS[c.status]);
   const emailNote = willEmail ? "\n\nClients will be emailed about confirmed, shipped, completed or cancelled orders." : "";
@@ -639,6 +766,14 @@ async function saveChanges() {
     changes.prices.forEach((c) => {
       batch.set(fb.db.collection("productPrices").doc(c.id), { price: c.price, updatedAt: now }, { merge: true });
     });
+    changes.details.forEach((c) => {
+      batch.set(fb.db.collection("productDetails").doc(c.id), {
+        description: c.values.description,
+        dimensions: c.values.dimensions,
+        care: c.values.care,
+        updatedAt: now
+      }, { merge: true });
+    });
 
     await batch.commit();
   } catch (err) {
@@ -653,6 +788,7 @@ async function saveChanges() {
   pendingOrderStatus = {};
   pendingProductStatus = {};
   pendingPrices = {};
+  pendingDetails = {};
   invalidPriceIds.clear();
 
   // Email clients whose order status changed (confirmed, shipped, completed, cancelled).

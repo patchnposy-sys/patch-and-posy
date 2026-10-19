@@ -41,7 +41,7 @@ const SPREADS = [
     desc: "A cheerful blend of warm terracotta, soft yellow and muted green checks. The classic gingham pattern gives this patchwork a cosy, timeless charm, like a sunset settling over a garden.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_101840.jpg",
+    image: "images/Sunset Gingham1.jpg",
     swatch: ["#E0A83E", "#8FBF6E", "#1C8577"]
   },
   {
@@ -50,7 +50,7 @@ const SPREADS = [
     desc: "A vibrant blend of traditional Ajrak-inspired prints and bold fuchsia, arranged in a checkerboard pattern. Earthy heritage motifs meet bright touches of colour, creating a spread that feels rooted in tradition yet fresh and contemporary.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_101952.jpg",
+    image: "images/Gulrang1.jpg",
     swatch: ["#F3ECDD", "#E8879C", "#C0396B"]
   },
   {
@@ -59,7 +59,7 @@ const SPREADS = [
     desc: "A soft blend of lilac and white tones set in a classic Half-Square Triangle (HST) pattern, with interlocking diamond and pinwheel effects. Hand-quilted and reversible.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_101619.jpg",
+    image: "images/Lilac Bloom1.jpg",
     swatch: ["#3E6B8A", "#E0A83E", "#C0396B"]
   },
   {
@@ -68,7 +68,7 @@ const SPREADS = [
     desc: "An earthy blend of sage green and vintage floral prints, arranged in a checkerboard pattern. Soft pink roses and delicate blue foliage bring a gentle cottage-garden charm, making the spread feel fresh, calm and welcoming.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_100209.jpg",
+    image: "images/Hariyali1.jpg",
     swatch: ["#8A6B4D", "#1C8577", "#E0794F"]
   },
   {
@@ -77,7 +77,7 @@ const SPREADS = [
     desc: "A classic sashing design that pairs cherry-red checked blocks with delicate botanical prints on crisp white strips. The structured grid gives a polished, timeless look with the warmth of traditional patchwork.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_101318.jpg",
+    image: "images/Winter Berry1.jpg",
     swatch: ["#E8879C", "#F3ECDD", "#8FBF6E"]
   },
   {
@@ -86,7 +86,7 @@ const SPREADS = [
     desc: "A calm checkerboard of soft periwinkle blue and crisp white floral blocks. The delicate blue blossoms and cool tones create an airy, refreshing feel, like a clear coastal morning brought indoors.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_101122.jpg",
+    image: "images/Bluebell2.jpg",
     swatch: ["#C0396B", "#3E6B8A", "#E0A83E"]
   },
   {
@@ -95,7 +95,7 @@ const SPREADS = [
     desc: "Inspired by the warm glow of morning light, Marigold combines soft yellow, crisp white and delicate vintage floral prints in a geometric arrangement. Interlocking triangles form radiant, star-like patterns that give the spread a bright and cheerful charm.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_101453.jpg",
+    image: "images/Marigold1.jpg",
     swatch: ["#1C8577", "#F3ECDD", "#E0794F"]
   },
   {
@@ -104,7 +104,7 @@ const SPREADS = [
     desc: "A playful mix of soft pink, cheerful marigold yellow and pale sky blue, set in a lively checkerboard. Sweet and full of colour, this patchwork brings a little joy to any room.",
     price: 8000,
     tag: "SOLD",
-    image: "images/20260809_100948.jpg",
+    image: "images/Cotton Candy1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
   {
@@ -113,7 +113,7 @@ const SPREADS = [
     desc: "A charming monochrome design inspired by a starlit sky. Bold black stars scattered across a crisp white background give a playful yet modern look. Starlit is a lovely choice for a child's room or a cosy corner of the home.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_100819.jpg",
+    image: "images/Starlit1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
   {
@@ -122,7 +122,7 @@ const SPREADS = [
     desc: "This patchwork spread features a soft diagonal stripe layout that creates a continuous, flowing effect, like cherry blossoms in the wind. The combination feels calm, graceful and subtly romantic.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_100344.jpg",
+    image: "images/Cherry Blossom Mist1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
   {
@@ -131,7 +131,7 @@ const SPREADS = [
     desc: "A lively combination of vibrant kiwi green and earthy botanical brown, set in a dynamic chevron pattern. Tango brings fresh colour and grounded warmth together in a bold design full of movement.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_100601.jpg",
+    image: "images/Tango1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
   {
@@ -140,7 +140,7 @@ const SPREADS = [
     desc: "A structured diamond sashing in a soft wheat tone frames luminous white blocks, accented with charming daisies. The delicate floral motifs and airy tones bring the quiet beauty of a sunlit meadow into the home.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_095709.jpg",
+    image: "images/Daisy1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
   {
@@ -149,7 +149,7 @@ const SPREADS = [
     desc: "Inspired by the timeless beauty of traditional Islamic tile art, Kashikari combines deep royal blue, crisp white and intricate botanical prints in a symmetrical geometric pattern. The repeating star-like forms suggest heritage, elegance and quiet grandeur.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_095318.jpg",
+    image: "images/Kashikari1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
   {
@@ -158,7 +158,7 @@ const SPREADS = [
     desc: "Inspired by the vibrant tradition of Rangoli, this joyful patchwork combines geometric shapes in deep fuchsia, rose pink, mint, lavender, peach and warm ochre. The repeating star-like patterns create a lively burst of colour and festive charm.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_100038.jpg",
+    image: "images/Rangoli1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   },
   {
@@ -167,10 +167,14 @@ const SPREADS = [
     desc: "Inspired by the calm of a deep green forest, Shinrin combines rich teal-green tones with tropical botanical prints in earthy terracotta, soft peach and leafy greens. The repeating equilateral triangles suggest stars and diamonds moving in a natural rhythm, like sunlight through a quiet forest canopy.",
     price: 8500,
     tag: "SOLD",
-    image: "images/20260809_102150.jpg",
+    image: "images/Shinrin1.jpg",
     swatch: ["#E0A83E", "#C0396B", "#3E6B8A"]
   }
 ];
+
+/* Default care text for every product. Edit it in the dashboard (Details tab)
+   once you have the real instructions; a saved value overrides this. */
+const DEFAULT_CARE = "Hand wash in cold water with mild soap. Dry in shade and iron on low heat.";
 
 /* ============================================================
    TABLECLOTHS — Volume 2 photos live in images/V2-Tablecloths/
@@ -254,10 +258,8 @@ TABLECLOTH_STYLES.forEach((style) => {
       price: style.price,
       tag: code === "TC12" ? "SOLD" : "AVAILABLE",
       description: TABLECLOTH_DESCRIPTIONS[code] || "",
-      dimensions: [
-        { size: "Size", measure: "DUMMY 60 × 108 in" }
-      ],
-      careInstructions: "DUMMY: Hand wash in cold water with mild soap. Dry in shade and iron on low heat.",
+      dimensions: "70 x 100 in",
+      careInstructions: DEFAULT_CARE,
       photos: photos,
       card: photos[2]
     });
@@ -379,6 +381,8 @@ BREAD_CLOTHS.forEach((b) => {
     name: "Bread Cloth: " + b.colour,
     category: "Bread Cloths",
     desc: "A simple, good quality cloth. Use it to keep rotis warm off the tawa, or to line your bread basket on the dining table.",
+    dimensions: "70 x 100 in",
+    careInstructions: DEFAULT_CARE,
     price: 250,
     tag: "AVAILABLE",
     image: images[0],
@@ -412,6 +416,8 @@ TEA_COZIES.forEach((t) => {
     name: "Tea Cozy: " + t.design,
     category: "Tea Cozies",
     desc: TEA_COZY_DESCRIPTION,
+    dimensions: "70 x 100 in",
+    careInstructions: DEFAULT_CARE,
     price: 500,
     tag: "AVAILABLE",
     image: images[0],
@@ -456,6 +462,8 @@ POT_HOLDERS.forEach((h) => {
     name: "Pot Holder: " + h.design,
     category: "Pot Holders",
     desc: POT_HOLDER_DESCRIPTION,
+    dimensions: "70 x 100 in",
+    careInstructions: DEFAULT_CARE,
     price: 1200,
     tag: "AVAILABLE",
     image: images[0],
@@ -515,6 +523,8 @@ KIDS_DASTERKHWANS.forEach((k) => {
     name: k.name,
     category: "Kids Dasterkhwan",
     desc: k.desc,
+    dimensions: "70 x 100 in",
+    careInstructions: DEFAULT_CARE,
     price: k.price,
     tag: k.tag,
     image: k.image,

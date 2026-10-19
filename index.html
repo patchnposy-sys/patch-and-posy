@@ -8,18 +8,23 @@
 
 <link rel="icon" href="images/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header>
-  <div class="nav">
-  
-    <nav class="nav-links">
-            <a href="#spreads">Patchwork Spreads</a>
-      <a href="#tablecloths">Tablecloths</a>
-      <a href="#accessories">Accessories</a>
+    <div class="nav">
+    <nav class="nav-links nav-left" aria-label="Shop">
+      <a href="#collections" class="tablecloth-open">Tablecloths</a>
+      <a href="#kids">Kids Dasterkhwan</a>
+      <a href="#accessories">Tea Cozy</a>
+      <a href="#accessories">Bread Cloth</a>
+      <a href="#accessories">Pot Holder</a>
+    </nav>
+    <a class="nav-brand" href="#top" aria-label="Patch &amp; Posy, back to top"></a>
+    <nav class="nav-links nav-links-right" aria-label="More">
+      <a href="#spreads">Patchwork Spreads <span class="sold-badge">Vol. 1 · Sold</span></a>
       <a href="#story">Our Story</a>
       <a href="#newsletter">Journal</a>
     </nav>
@@ -31,38 +36,19 @@
 </header>
 
 <section class="hero" id="top">
-  <div class="hero-grid">
-    <div>
-      <p class="eyebrow-quote">"Made with care, for every home."</p>
-      <h1>Handmade pieces for <em>homes</em> that remember how to feel warm.</h1>
-      <p class="lede">Quilts, tablecloths, coasters and small treasures, each one patched and stitched by hand. Every piece is made slowly and carefully, with nothing rushed and nothing machine-perfect.</p>
-      <div class="hero-ctas">
-        <a href="#tablecloths" class="btn-primary">Shop the collection</a>
-        <a href="#story" class="btn-secondary">Read our story</a>
-      </div>
-    </div>
-    <div class="hero-logo-frame">
-      <img src="images/logo.jpg" alt="Patch &amp; Posy logo, a stitched circular quilt-block emblem">
-    </div>
+  <div class="hero-frame">
+    <!-- Slideshow and its text are built by js/main.js -->
+    <div class="hero-slideshow" id="hero-slideshow" aria-label="Our collections"></div>
   </div>
 </section>
 
-
-<section class="section shop shop-alt" id="tablecloths">
+<section class="collect" id="collections">
   <div class="wrap">
-    <div class="collection-banner tablecloth-open" role="button" tabindex="0" aria-label="Open tablecloths">
-      <div class="collection-banner-text">
-        <p class="collection-eyebrow">New collection · Volume 2</p>
-        <h3>Tablecloth styles</h3>
-      </div>
-    </div>
-    <div class="section-head">
-      <h2>Tablecloths</h2>
-      <p>Our tablecloths feature a runner design in patchwork or lace, with a matching border and pretty prints for everyday meals and special occasions. Every piece is double layered and made from high quality cotton fabric, for a better fall and fit on the table. Tap the banner to see every design.</p>
-    </div>
-    <button type="button" class="btn-add-bag tablecloth-open">View tablecloths</button>
+    <h2 class="collect-title">Explore our collection</h2>
+    <div class="collect-grid" id="collect-grid"></div>
   </div>
 </section>
+
 
 <section class="section shop" id="accessories">
   <div class="wrap">
@@ -76,19 +62,25 @@
   </div>
 </section>
 
+<section class="section shop" id="kids">
+  <div class="wrap">
+    <p class="section-eyebrow">New collection · Volume 2</p>
+    <div class="section-head">
+      <h2>Kids Dasterkhwan</h2>
+      <p id="kids-desc"></p>
+    </div>
+    <div class="patch-grid" id="kids-card"></div>
+  </div>
+</section>
+
 <section class="section shop" id="spreads">
   <div class="wrap">
-    <div class="collection-banner spreads-open" role="button" tabindex="0" aria-label="Open Patchwork Spreads" data-banner="images/V1-BedSpreads/Thumbnail.JPG">
-      <div class="collection-banner-text">
-        <p class="collection-eyebrow">Volume 1 · Sold out</p>
-        <h3>Patchwork Spreads</h3>
-      </div>
-    </div>
+    <p class="section-eyebrow">Volume 1 · Sold out</p>
     <div class="section-head">
       <h2>Patchwork Spreads</h2>
-      <p>Fifteen one-of-a-kind spreads, each pieced and quilted by hand. All are sold. Tap to view the collection.</p>
+      <p>Fifteen one-of-a-kind spreads, each pieced and quilted by hand. All are sold. Tap a spread to see its details.</p>
     </div>
-    <button type="button" class="btn-add-bag spreads-open">View spreads</button>
+    <div class="spread-grid" id="spread-grid"></div>
   </div>
 </section>
 
@@ -138,7 +130,7 @@
 <section class="section values" id="values">
   <div class="wrap">
     <div class="section-head">
-      <h2>Why handmade, still</h2>
+      <h2>Why homemade, still</h2>
       <p>In a world of fast production, we have chosen to slow down. Here is what that means in practice.</p>
     </div>
     <div class="values-grid">
@@ -174,19 +166,19 @@
 <footer>
   <div class="wrap footer-grid">
     <div>
-      <div class="footer-mark">Patch &amp; Posy</div>
+      <img class="footer-logo" src="images/logo.jpg" alt="Patch &amp; Posy">
       <p>Handmade pieces for homes that value warmth, comfort and slower living.</p>
     </div>
     <div class="footer-col">
       <h4>Shop</h4>
             <a href="#spreads">Patchwork Spreads</a>
-      <a href="#tablecloths">Tablecloths</a>
+      <a href="#collections" class="tablecloth-open">Tablecloths</a>
       <a href="#accessories">Accessories</a>
     </div>
     <div class="footer-col">
       <h4>About</h4>
       <a href="#story">Our story</a>
-      <a href="#values">Why handmade</a>
+      <a href="#values">Why homemade, still</a>
       <a href="#newsletter">Journal</a>
     </div>
     <div class="footer-col">

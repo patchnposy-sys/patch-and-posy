@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="images/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/dashboard.css">
 </head>
@@ -45,6 +45,7 @@
       <button type="button" class="dash-tab" data-tab="clients">Clients</button>
       <button type="button" class="dash-tab" data-tab="products">Products</button>
       <button type="button" class="dash-tab" data-tab="prices">Prices</button>
+      <button type="button" class="dash-tab" data-tab="details">Details</button>
       <button type="button" class="dash-tab" data-tab="local">Unsynced local orders</button>
     </nav>
   </header>
@@ -154,6 +155,30 @@
           </thead>
           <tbody id="prices-table-body">
             <tr><td colspan="4" class="dash-empty">Loading prices…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DETAILS TAB (description, dimensions, care instructions) -->
+    <section class="dash-panel" id="panel-details">
+      <div class="dash-panel-head">
+        <h2>Details</h2>
+        <p class="dash-panel-sub">Description, dimensions and care instructions shown on the website for tablecloths, bread cloths, tea cozies, pot holders and Kids Dasterkhwan. Edit the boxes, then press Save changes at the bottom of the page. Leave Dimensions empty to hide that section on the website.</p>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table dash-details-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Dimensions</th>
+              <th>Care instructions</th>
+            </tr>
+          </thead>
+          <tbody id="details-table-body">
+            <tr><td colspan="5" class="dash-empty">Loading details…</td></tr>
           </tbody>
         </table>
       </div>

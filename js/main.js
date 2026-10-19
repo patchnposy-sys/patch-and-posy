@@ -279,6 +279,15 @@ function showBreadDetail(id) {
   if (!body || !p) return;
 
   const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+  const available = isLiveAvailable(p);
+  const qtyHTML = available ? `
+    <div class="cart-qty bread-qty">
+      <span>Quantity</span>
+      <button type="button" class="qty-btn" data-qty-action="dec">−</button>
+      <span data-qty-value>1</span>
+      <button type="button" class="qty-btn" data-qty-action="inc">+</button>
+    </div>
+    <p class="bread-hint">Up to ${BREAD_MAX_QTY} for each design.</p>` : "";
 
   body.innerHTML = `
     <button type="button" class="bread-back" id="bread-back">← All colours</button>
@@ -288,11 +297,29 @@ function showBreadDetail(id) {
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${qtyHTML}${buyActionsHTML(p.id, available, "Add to bag")}</div>`;
 
   document.getElementById("bread-back").addEventListener("click", showBreadColours);
+  setupBreadQuantity(body);
   attachAddToBagHandlers();
   applyLiveProductStatuses();
+}
+
+/* Quantity box for bread cloths: 1 to BREAD_MAX_QTY */
+function setupBreadQuantity(body) {
+  const value = body.querySelector("[data-qty-value]");
+  if (!value) return;
+  const incBtn = body.querySelector('[data-qty-action="inc"]');
+  const decBtn = body.querySelector('[data-qty-action="dec"]');
+  const update = (next) => {
+    const n = Math.min(Math.max(next, 1), BREAD_MAX_QTY);
+    value.textContent = n;
+    incBtn.disabled = n >= BREAD_MAX_QTY;
+    decBtn.disabled = n <= 1;
+  };
+  incBtn.addEventListener("click", () => update(Number(value.textContent) + 1));
+  decBtn.addEventListener("click", () => update(Number(value.textContent) - 1));
+  update(1);
 }
 
 function initBreadModal() {
@@ -324,8 +351,11 @@ function attachAddToBagHandlers() {
     btn.dataset.bound = "true";
     btn.addEventListener("click", () => {
       const product = allProducts.find((p) => p.id === btn.dataset.productId);
+      // Bread cloths have a quantity box in their popup; everything else adds 1.
+      const qtyEl = btn.closest(".bread-buy")?.querySelector("[data-qty-value]");
+      const quantity = qtyEl ? Number(qtyEl.textContent) || 1 : 1;
       if (product && typeof addToCart === "function") {
-        addToCart(product);
+        addToCart(product, quantity);
       }
     });
   });
@@ -377,9 +407,7 @@ function loadLiveData() {
 
       getAllProducts().forEach((p) => {
         if (liveStatusById[p.id]) p.tag = liveStatusById[p.id];
-        // Tablecloth prices come only from products-data.js (style prices).
-        const isTablecloth = String(p.id).startsWith("DS-");
-        if (livePriceById[p.id] && !isTablecloth) p.price = livePriceById[p.id];
+        if (livePriceById[p.id]) p.price = livePriceById[p.id];
       });
     })();
   }

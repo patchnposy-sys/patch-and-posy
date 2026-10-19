@@ -48,5 +48,8 @@ function initFirebase() {
   firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
   firebaseDB = firebase.firestore();
   firebaseAuth = firebase.auth();
+  // Keep the admin signed in when the page is reloaded or reopened
+  firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .catch((err) => console.warn("Could not keep the sign-in on this browser:", err));
   return { app: firebaseApp, db: firebaseDB, auth: firebaseAuth };
 }

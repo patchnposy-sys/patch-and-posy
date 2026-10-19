@@ -20,18 +20,29 @@ function saveCart(cart) {
   updateCartBadge();
 }
 
-function addToCart(product) {
+/* Only bread cloths can be bought in more than one. Up to 4 of each design.
+   Every other product is always 1. */
+const BREAD_MAX_QTY = 4;
+
+function maxQtyFor(product) {
+  return product && product.category === "Bread Cloths" ? BREAD_MAX_QTY : 1;
+}
+
+function addToCart(product, quantity = 1) {
   const cart = getCart();
+  const max = maxQtyFor(product);
   const existing = cart.find((item) => item.id === product.id);
   if (existing) {
-    existing.qty += 1;
+    existing.max = max;
+    existing.qty = Math.min(Math.max(existing.qty, 1) + quantity, max);
   } else {
     cart.push({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image || product.card || (product.photos && product.photos[0]) || "",
-      qty: 1
+      qty: Math.min(Math.max(quantity, 1), max),
+      max: max
     });
   }
   saveCart(cart);
@@ -45,7 +56,7 @@ function updateCartQty(id, qty) {
     cart = cart.filter((item) => item.id !== id);
   } else {
     const item = cart.find((i) => i.id === id);
-    if (item) item.qty = qty;
+    if (item) item.qty = Math.min(qty, item.max || 1);
   }
   saveCart(cart);
   renderCartDrawer();
@@ -105,7 +116,9 @@ function refreshCartItems() {
     const p = all.find((x) => x.id === item.id);
     if (!p) { changed = true; return; }
     const image = p.image || p.card || (p.photos && p.photos[0]) || "";
-    const updated = { ...item, name: p.name, price: p.price, image };
+    const max = maxQtyFor(p);
+    const qty = Math.min(Math.max(item.qty, 1), max);
+    const updated = { ...item, name: p.name, price: p.price, image, max, qty };
     if (JSON.stringify(updated) !== JSON.stringify(item)) changed = true;
     next.push(updated);
   });
@@ -134,11 +147,11 @@ function renderCartDrawer() {
       <div class="cart-line-info">
         <h4>${escapeHTML(item.name)}</h4>
         <p class="cart-line-price">${formatPKR(item.price)}</p>
-        <div class="cart-qty">
+        ${item.max > 1 ? `<div class="cart-qty">
           <button type="button" class="qty-btn" data-action="dec">−</button>
           <span>${item.qty}</span>
-          <button type="button" class="qty-btn" data-action="inc">+</button>
-        </div>
+          <button type="button" class="qty-btn" data-action="inc"${item.qty >= item.max ? " disabled" : ""} title="Maximum ${item.max} for each design">+</button>
+        </div>` : ""}
       </div>
       <button type="button" class="cart-line-remove" aria-label="Remove ${escapeHTML(item.name)}">✕</button>
     </div>
@@ -157,10 +170,12 @@ function renderCartDrawer() {
   body.querySelectorAll(".cart-line").forEach((line) => {
     const id = line.dataset.id;
     const cartItem = cart.find((i) => i.id === id);
-    line.querySelector('[data-action="inc"]').addEventListener("click", () => {
-      updateCartQty(id, cartItem.qty + 1);
+    const incBtn = line.querySelector('[data-action="inc"]');
+    const decBtn = line.querySelector('[data-action="dec"]');
+    if (incBtn) incBtn.addEventListener("click", () => {
+      updateCartQty(id, Math.min(cartItem.qty + 1, cartItem.max || 1));
     });
-    line.querySelector('[data-action="dec"]').addEventListener("click", () => {
+    if (decBtn) decBtn.addEventListener("click", () => {
       updateCartQty(id, cartItem.qty - 1);
     });
     line.querySelector(".cart-line-remove").addEventListener("click", () => {

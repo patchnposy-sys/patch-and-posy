@@ -413,12 +413,9 @@ function renderProductsTable() {
 
   let html = "";
   groupedProducts().forEach((items, name) => {
-    const available = items.filter(p => (pendingProductStatus[p.id] || liveStatusOf(p)) === "AVAILABLE").length;
     html += `
       <tr class="dash-group-row">
-        <th colspan="5">${escapeHTML(name)}
-          <span class="dash-group-count">${available} of ${items.length} available</span>
-        </th>
+        <th colspan="5">${escapeHTML(name)}</th>
       </tr>`;
     html += items.map(productRowHTML).join("");
   });
@@ -652,21 +649,54 @@ async function saveChanges() {
     return;
   }
 
-  // Email clients whose order status changed (confirmed, shipped, completed, cancelled)
+  // The save has succeeded: clear the staged changes straight away
+  pendingOrderStatus = {};
+  pendingProductStatus = {};
+  pendingPrices = {};
+  invalidPriceIds.clear();
+
+  // Email clients whose order status changed (confirmed, shipped, completed, cancelled).
+  // An email problem never undoes or blocks the save.
   const toEmail = changes.orders.filter((c) => typeof ORDER_STATUS_EMAILS !== "undefined" && ORDER_STATUS_EMAILS[c.status]);
   let failedEmails = 0;
   if (toEmail.length) {
     setSaving(true, "Saved. Emailing clients…");
-    const results = await Promise.all(toEmail.map((c) => sendOrderStatusEmail(c.order, c.status)));
-    failedEmails = results.filter((ok) => !ok).length;
+    try {
+      const results = await Promise.all(toEmail.map((c) => sendOrderStatusEmail(c.order, c.status).catch(() => false)));
+      failedEmails = results.filter((ok) => !ok).length;
+    } catch (err) {
+      console.error("Email step failed:", err);
+      failedEmails = toEmail.length;
+    }
   }
 
-  if (failedEmails) {
-    alert(`Your changes are saved, but ${failedEmails} client email${failedEmails === 1 ? " wasn't" : "s weren't"} sent. Check js/emailjs-config.js and SETUP.md.`);
+  // Refresh what is shown, without reloading the page
+  setSaving(true, "Saved. Updating the page…");
+  try {
+    await Promise.all([loadOrders(), loadProductStatuses()]);
+  } catch (err) {
+    console.error("Refresh after save failed:", err);
   }
 
-  setSaving(true, "Saved. Reloading the page…");
-  setTimeout(() => window.location.reload(), failedEmails ? 0 : 1200);
+  setSaving(false);
+  updateSaveBar();
+  showSaveResult(
+    failedEmails
+      ? `Saved. ${failedEmails} client email${failedEmails === 1 ? " was" : "s were"} not sent. Check the email settings in SETUP.md.`
+      : "Saved. The website is up to date.",
+    failedEmails ? "warning" : "success"
+  );
+}
+
+/* Short message at the top of the page after a save */
+function showSaveResult(text, state) {
+  const el = document.getElementById("dash-toast");
+  if (!el) return;
+  el.textContent = text;
+  el.dataset.state = state;
+  el.hidden = false;
+  clearTimeout(showSaveResult.timer);
+  showSaveResult.timer = setTimeout(() => { el.hidden = true; }, 4500);
 }
 
 /* ---------- Helpers ---------- */

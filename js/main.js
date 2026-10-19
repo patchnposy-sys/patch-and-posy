@@ -21,7 +21,11 @@ document.addEventListener("error", (e) => {
 document.addEventListener("DOMContentLoaded", () => {
   // Spreads now live in the Patchwork Spreads popup (see initSpreadsModal).
   // Daily Wear is hidden for now.
+  renderHeroSlideshow();
+  renderCollectionTiles();
   renderAccessories(typeof ACCESSORIES !== "undefined" ? ACCESSORIES : []);
+  renderKidsSection();
+  renderSpreadGrid();
   renderEventGallery(typeof EVENT_GALLERY !== "undefined" ? EVENT_GALLERY : []);
 
   initMobileMenu();
@@ -123,7 +127,9 @@ function renderAccessories(products) {
 
   const ACCESSORY_ORDER = ["Tea Cozies", "Pot Holders", "Bread Cloths", "Kids Dasterkhwan"];
   const rank = (c) => { const i = ACCESSORY_ORDER.indexOf(c); return i === -1 ? 99 : i; };
+  // Kids Dasterkhwan has its own section, so it is not part of the accessories grid.
   const categories = [...new Set(products.map(p => p.category || "Other"))]
+    .filter(cat => cat !== "Kids Dasterkhwan")
     .sort((a, b) => rank(a) - rank(b));
 
   filtersEl.innerHTML = [`<button type="button" class="chip is-active" data-filter="all">All</button>`]
@@ -168,9 +174,12 @@ function renderEventGallery(photos) {
   if (!gallery) return;
 
   gallery.innerHTML = photos.map((photo) => `
-    <button type="button" class="event-photo" data-image="${escapeHTML(photo.image)}" data-caption="${escapeHTML(photo.caption || "")}">
-      <img src="${escapeHTML(photo.image)}" alt="${escapeHTML(photo.caption || "Event photo")}" loading="lazy">
-    </button>
+    <figure class="event-card">
+      <button type="button" class="event-photo" data-image="${escapeHTML(photo.image)}" data-caption="${escapeHTML(photo.caption || "")}">
+        <img src="${escapeHTML(photo.image)}" alt="${escapeHTML(photo.caption || "Event photo")}" loading="lazy">
+      </button>
+      <figcaption class="event-caption">${escapeHTML(photo.caption || "")}</figcaption>
+    </figure>
   `).join("");
 
   gallery.querySelectorAll(".event-photo").forEach((btn) => {
@@ -221,10 +230,17 @@ function breadProducts() {
     .filter(p => p.category === "Bread Cloths");
 }
 
+/* Category photo: the thumbnail, with a second design that fades in on hover while the picture drifts */
+function thumbPhotoHTML(primary, secondary, alt) {
+  const a = imgTag(primary, alt || "", "fill").replace("<img ", '<img class="fm-a" ');
+  const b = secondary ? imgTag(secondary, alt || "", "fill").replace("<img ", '<img class="fm-b" ') : "";
+  return a + b;
+}
+
 function breadThumbnailHTML() {
   return `
     <div class="patch bread-thumb">
-      <div class="patch-photo" style="background-image:url('${escapeHTML(BREAD_CLOTH_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+      <div class="patch-photo">${thumbPhotoHTML(BREAD_CLOTH_THUMBNAIL, breadProducts()[1]?.image, "Bread cloths")}</div>
       <div class="patch-info">
         <h3>Bread Cloths</h3>
         <p class="desc">Four colours. Tap to view the designs and add them to your bag.</p>
@@ -297,6 +313,7 @@ function showBreadDetail(id) {
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
+    ${detailBlocksHTML(p)}
     <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${qtyHTML}${buyActionsHTML(p.id, available, "Add to bag")}</div>`;
 
   document.getElementById("bread-back").addEventListener("click", showBreadColours);
@@ -376,6 +393,7 @@ const LOCAL_SOLD_KEY = "patchAndPosyLocallySold";
    so buy buttons and cart prices use the live values. */
 let liveStatusById = {};
 let livePriceById = {};
+let liveDetailsById = {};   // productDetails/{id} -> { description, dimensions, care }
 let liveLoadPromise = null;
 
 function loadLiveData() {
@@ -402,6 +420,15 @@ function loadLiveData() {
           });
         } catch (err) {
           console.error("Couldn't load live product data:", err);
+        }
+
+        // Descriptions, dimensions and care text: kept apart so that a problem here
+        // never stops the saved statuses and prices from loading.
+        try {
+          const detailSnap = await fb.db.collection("productDetails").get();
+          detailSnap.docs.forEach((doc) => { liveDetailsById[doc.id] = doc.data(); });
+        } catch (err) {
+          console.error("Couldn't load product details:", err);
         }
       }
 
@@ -458,6 +485,35 @@ function setPriceFor(productId, price) {
 }
 
 
+/* ---------- Product details: description, dimensions, care ----------
+   Edited in the dashboard's Details tab (productDetails/{id}). A saved text
+   replaces the default from products-data.js, even when it is left empty. */
+function detailsOf(p) {
+  const saved = liveDetailsById[p.id] || {};
+  const pick = (value, fallback) => (typeof value === "string" ? value : fallback);
+  return {
+    description: pick(saved.description, p.description || p.desc || ""),
+    dimensions: pick(saved.dimensions, typeof p.dimensions === "string" ? p.dimensions : ""),
+    care: pick(saved.care, p.careInstructions || "")
+  };
+}
+
+/* Details screen blocks. An empty section is left out of the page. */
+function detailBlocksHTML(p) {
+  const d = detailsOf(p);
+  const sections = [];
+  if (d.description.trim()) {
+    sections.push(`<section class="tc-section"><h4>Description</h4><p>${escapeHTML(d.description)}</p></section>`);
+  }
+  if (d.dimensions.trim()) {
+    sections.push(`<section class="tc-section"><h4>Dimensions</h4><p class="detail-lines">${escapeHTML(d.dimensions)}</p></section>`);
+  }
+  if (d.care.trim()) {
+    sections.push(`<section class="tc-section"><h4>Care instructions</h4><p>${escapeHTML(d.care)}</p></section>`);
+  }
+  return sections.length ? `<div class="tc-detail">${sections.join("")}</div>` : "";
+}
+
 function cssEscape(value) {
   return String(value).replace(/["\\]/g, "\\$&");
 }
@@ -497,16 +553,19 @@ function escapeHTML(str) {
 /* ---------- Mobile menu ---------- */
 function initMobileMenu() {
   const toggle = document.querySelector(".menu-toggle");
-  const links = document.querySelector(".nav-links");
-  if (!toggle || !links) return;
+  const nav = document.querySelector(".nav");
+  if (!toggle || !nav) return;
 
   toggle.addEventListener("click", () => {
-    const isOpen = links.classList.toggle("is-open");
+    const isOpen = nav.classList.toggle("menu-open");
     toggle.setAttribute("aria-expanded", String(isOpen));
   });
 
-  links.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => links.classList.remove("is-open"));
+  nav.querySelectorAll(".nav-links a").forEach((link) => {
+    link.addEventListener("click", () => {
+      nav.classList.remove("menu-open");
+      toggle.setAttribute("aria-expanded", "false");
+    });
   });
 }
 
@@ -554,7 +613,7 @@ function potProducts() {
 function potThumbnailHTML() {
   return `
     <div class="patch pot-thumb">
-      <div class="patch-photo" style="background-image:url('${escapeHTML(POT_HOLDER_THUMBNAIL)}'); background-size:cover; background-position:center;"></div>
+      <div class="patch-photo">${thumbPhotoHTML(POT_HOLDER_THUMBNAIL, potProducts()[1]?.image, "Pot holders")}</div>
       <div class="patch-info">
         <h3>Pot Holders</h3>
         <p class="desc">Eleven designs. Tap to view them and add them to your bag.</p>
@@ -618,6 +677,7 @@ function showPotDetail(id) {
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
+    ${detailBlocksHTML(p)}
     <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
 
   document.getElementById("pot-back").addEventListener("click", showPotDesigns);
@@ -647,7 +707,7 @@ function teaProducts() {
 function teaThumbnailHTML() {
   return `
     <div class="patch tea-thumb">
-      <div class="patch-photo">${imgTag(TEA_COZY_THUMBNAIL, "Tea cozies", "fill")}</div>
+      <div class="patch-photo">${thumbPhotoHTML(TEA_COZY_THUMBNAIL, teaProducts()[1]?.image, "Tea cozies")}</div>
       <div class="patch-info">
         <h3>Tea Cozies</h3>
         <p class="desc">Two designs. Tap to view them and add them to your bag.</p>
@@ -711,6 +771,7 @@ function showTeaDetail(id) {
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
+    ${detailBlocksHTML(p)}
     <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
 
   document.getElementById("tea-back").addEventListener("click", showTeaDesigns);
@@ -797,57 +858,37 @@ function styleLowestPrice(style) {
   return prices.length ? Math.min(...prices) : style.price;
 }
 
-/* Step 1: the three style cards (Patchwork, Lacework, Dailywares) */
+/* One list for all three styles: style name, its general description, then the design thumbnails */
 function showTableclothStyles() {
   const body = document.getElementById("tablecloth-body");
   if (!body) return;
   body.innerHTML = `
     <h3 class="bread-title">Tablecloths · Volume 2</h3>
-    <p class="bread-hint">Choose a style to see its designs.</p>
-    <div class="tc-style-grid">
-      ${tableclothStyles().map(s => `
-        <button type="button" class="tc-style-card" data-tc-style="${escapeHTML(s.id)}">
-          <span class="tc-style-photo">${imgTag(TABLECLOTH_FOLDER + encodeURI(s.thumbnail), s.name, "fill")}</span>
-          <span class="tc-style-name">${escapeHTML(s.name)}</span>
-          <span class="tc-style-desc">${escapeHTML(s.description)}</span>
-          <span class="tc-style-meta">From ${formatPKR(styleLowestPrice(s))}</span>
-        </button>`).join("")}
-    </div>`;
+    <p class="bread-hint">Tap a design to see its photos, description and price.</p>
+    ${tableclothStyles().map(s => `
+      <section class="tc-style-section">
+        <h4 class="tc-style-title">${escapeHTML(s.name)}</h4>
+        <p class="tc-style-desc">${escapeHTML(s.description)}</p>
+        <div class="tablecloth-grid">
+          ${tableclothDesigns(s.id).map(d => `
+            <button type="button" class="tablecloth-tile" data-tc-id="${escapeHTML(d.id)}">
+              <span class="tablecloth-tile-photo">${imgTag(d.card, d.name, "fill")}</span>
+              <span class="tablecloth-tile-name">${escapeHTML(d.name)}</span>
+              <span class="tc-tile-row">
+                <span class="tc-tile-price" data-price-for="${escapeHTML(d.id)}">${formatPKR(d.price)}</span>
+                <span class="tc-tag${isTableclothAvailable(d) ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(d.id)}">${escapeHTML(d.tag)}</span>
+              </span>
+            </button>`).join("")}
+        </div>
+      </section>`).join("")}`;
 
-  body.querySelectorAll("[data-tc-style]").forEach((btn) => {
-    btn.addEventListener("click", () => showTableclothDesigns(btn.dataset.tcStyle));
-  });
-}
-
-/* Step 2: the designs in one style, each with its c photo, price and availability */
-function showTableclothDesigns(styleId) {
-  const body = document.getElementById("tablecloth-body");
-  const style = tableclothStyles().find(s => s.id === styleId);
-  if (!body || !style) return;
-
-  body.innerHTML = `
-    <button type="button" class="bread-back" id="tc-back-styles">← All styles</button>
-    <h3 class="bread-title">${escapeHTML(style.name)}</h3>
-    <p class="bread-hint">${escapeHTML(style.description)}</p>
-    <div class="tablecloth-grid">
-      ${tableclothDesigns(styleId).map(d => `
-        <button type="button" class="tablecloth-tile" data-tc-id="${escapeHTML(d.id)}">
-          <span class="tablecloth-tile-photo">${imgTag(d.card, d.name, "fill")}</span>
-          <span class="tablecloth-tile-name">${escapeHTML(d.name)}</span>
-          <span class="tc-tile-row">
-            <span class="tc-tile-price" data-price-for="${escapeHTML(d.id)}">${formatPKR(d.price)}</span>
-            <span class="tc-tag${isTableclothAvailable(d) ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(d.id)}">${escapeHTML(d.tag)}</span>
-          </span>
-        </button>`).join("")}
-    </div>`;
-
-  document.getElementById("tc-back-styles").addEventListener("click", showTableclothStyles);
   body.querySelectorAll("[data-tc-id]").forEach((btn) => {
     btn.addEventListener("click", () => showTableclothDetail(btn.dataset.tcId));
   });
+  applyLiveProductStatuses();
 }
 
-/* Step 3: one design — all three photos, then description, price, dimensions, care, and the buy buttons */
+/* One design: all three photos, price, then the design's own description, dimensions and care */
 function showTableclothDetail(id) {
   const body = document.getElementById("tablecloth-body");
   const d = tableclothDesignsAll().find(x => x.id === id);
@@ -855,39 +896,20 @@ function showTableclothDetail(id) {
   const style = tableclothStyles().find(s => s.id === d.style);
   const available = isTableclothAvailable(d);
 
-  const dimsHTML = (d.dimensions || []).map(x => `
-    <li><span>${escapeHTML(x.size)}</span><span>${escapeHTML(x.measure)}</span></li>`).join("");
-
-  const buyHTML = `<div class="bread-buy" data-product-id="${escapeHTML(d.id)}">${buyActionsHTML(d.id, available, "Add to bag")}</div>`;
-
   body.innerHTML = `
-    <button type="button" class="bread-back" id="tc-back-designs">← Back to ${escapeHTML(style ? style.name : "designs")}</button>
+    <button type="button" class="bread-back" id="tc-back-designs">← Back to ${escapeHTML(style ? style.name : "tablecloths")}</button>
     <h3 class="bread-title">${escapeHTML(d.name)}</h3>
     <div class="bread-photos tc-zoom">
       ${d.photos.map(src => imgTag(src, d.name)).join("")}
     </div>
-    <div class="tc-detail">
-      <section class="tc-section">
-        <h4>Description</h4>
-        <p>${escapeHTML(d.description)}</p>
-      </section>
-      <section class="tc-section tc-price-row">
-        <h4>Price</h4>
-        <p class="tc-price" data-price-for="${escapeHTML(d.id)}">${formatPKR(d.price)}</p>
-        <span class="tc-tag${available ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(d.id)}">${escapeHTML(d.tag)}</span>
-      </section>
-      <section class="tc-section">
-        <h4>Dimensions</h4>
-        <ul class="tc-dims">${dimsHTML}</ul>
-      </section>
-      <section class="tc-section">
-        <h4>Care Instructions</h4>
-        <p>${escapeHTML(d.careInstructions)}</p>
-      </section>
+    <div class="tc-price-row">
+      <p class="tc-price" data-price-for="${escapeHTML(d.id)}">${formatPKR(d.price)}</p>
+      <span class="tc-tag${available ? " tc-tag-available" : ""}" data-tag-for="${escapeHTML(d.id)}">${escapeHTML(d.tag)}</span>
     </div>
-    ${buyHTML}`;
+    ${detailBlocksHTML(d)}
+    <div class="bread-buy" data-product-id="${escapeHTML(d.id)}">${buyActionsHTML(d.id, available, "Add to bag")}</div>`;
 
-  document.getElementById("tc-back-designs").addEventListener("click", () => showTableclothDesigns(d.style));
+  document.getElementById("tc-back-designs").addEventListener("click", showTableclothStyles);
   attachAddToBagHandlers();
   applyLiveProductStatuses();
 }
@@ -920,15 +942,58 @@ function initTableclothBanner() {
   });
 }
 
-/* ---------- Patchwork Spreads (Volume 1, all sold): thumbnail → popup with every spread, photo full size ---------- */
-function openSpreadsModal() {
+/* ---------- Patchwork Spreads (Volume 1, all sold): grid on the page, details in the popup ---------- */
+function spreadsList() {
+  return typeof SPREADS !== "undefined" ? SPREADS : [];
+}
+
+function renderSpreadGrid() {
+  const grid = document.getElementById("spread-grid");
+  if (!grid) return;
+  grid.innerHTML = spreadsList().map(spreadCardHTML).join("");
+  applyLiveProductStatuses();
+}
+
+function spreadCardHTML(p) {
+  return `
+    <button type="button" class="spread-card" data-spread-id="${escapeHTML(p.id)}">
+      <div class="spread-photo">${imgTag(p.image, p.name, "fill")}</div>
+      <div class="spread-info">
+        <h3>${escapeHTML(p.name)}</h3>
+        <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
+        <span class="tc-tag" data-tag-for="${escapeHTML(p.id)}">${escapeHTML(p.tag)}</span>
+      </div>
+    </button>`;
+}
+
+/* One spread: photo (tap to enlarge), price, tag and its description */
+function openSpreadDetail(id) {
   const overlay = document.getElementById("spreads-overlay");
   const modal = document.getElementById("spreads-modal");
-  if (!overlay || !modal) return;
-  showSpreads();
+  const body = document.getElementById("spreads-body");
+  const p = spreadsList().find(x => x.id === id);
+  if (!overlay || !modal || !body || !p) return;
+
+  body.innerHTML = `
+    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
+    <div class="bread-photos tc-zoom">
+      ${imgTag(p.image, p.name)}
+    </div>
+    <div class="tc-price-row">
+      <p class="tc-price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
+      <span class="tc-tag" data-tag-for="${escapeHTML(p.id)}">${escapeHTML(p.tag)}</span>
+    </div>
+    <div class="tc-detail">
+      <section class="tc-section">
+        <h4>Description</h4>
+        <p>${escapeHTML(p.desc)}</p>
+      </section>
+    </div>`;
+
   overlay.classList.add("is-open");
   modal.classList.add("is-open");
   document.body.style.overflow = "hidden";
+  applyLiveProductStatuses();
 }
 
 function closeSpreadsModal() {
@@ -940,33 +1005,10 @@ function closeSpreadsModal() {
   document.body.style.overflow = "";
 }
 
-function spreadCardHTML(p) {
-  return `
-    <div class="spread-card">
-      <div class="spread-photo tc-zoom">${imgTag(p.image, p.name, "fill")}</div>
-      <div class="spread-info">
-        <h3>${escapeHTML(p.name)}</h3>
-        <p class="desc">${escapeHTML(p.desc)}</p>
-        <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
-        <span class="tc-tag" data-tag-for="${escapeHTML(p.id)}">${escapeHTML(p.tag)}</span>
-      </div>
-    </div>`;
-}
-
-function showSpreads() {
-  const body = document.getElementById("spreads-body");
-  if (!body) return;
-  const items = typeof SPREADS !== "undefined" ? SPREADS : [];
-  body.innerHTML = `
-    <h3 class="bread-title">Patchwork Spreads · Volume 1</h3>
-    <p class="bread-hint">All fifteen spreads are sold. Tap a photo to see it full size.</p>
-    <div class="spread-grid">${items.map(spreadCardHTML).join("")}</div>`;
-  applyLiveProductStatuses();
-}
-
 function initSpreadsModal() {
   document.addEventListener("click", (e) => {
-    if (e.target.closest(".spreads-open")) openSpreadsModal();
+    const card = e.target.closest("[data-spread-id]");
+    if (card) openSpreadDetail(card.dataset.spreadId);
   });
   document.getElementById("spreads-close")?.addEventListener("click", closeSpreadsModal);
   document.getElementById("spreads-overlay")?.addEventListener("click", closeSpreadsModal);
@@ -985,10 +1027,9 @@ function kidsProducts() {
 function kidsThumbnailHTML() {
   return `
     <div class="patch kd-thumb">
-      <div class="patch-photo">${imgTag(KIDS_DASTERKHWAN_THUMBNAIL, "Kids Dasterkhwan", "fill")}</div>
+      <div class="patch-photo">${thumbPhotoHTML(KIDS_DASTERKHWAN_THUMBNAIL, kidsProducts()[1]?.image, "Kids Dasterkhwan")}</div>
       <div class="patch-info">
         <h3>Kids Dasterkhwan</h3>
-        <p class="desc">${escapeHTML(KIDS_DASTERKHWAN_DESCRIPTION)}</p>
         <button type="button" class="btn-add-bag kd-open">View designs</button>
       </div>
     </div>`;
@@ -1048,9 +1089,9 @@ function showKidsDetail(id) {
     <div class="bread-photos tc-zoom">
       ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
-    <p class="bread-description">${escapeHTML(p.desc)}</p>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
     ${tileStatusHTML(p)}
+    ${detailBlocksHTML(p)}
     <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
 
   document.getElementById("kd-back").addEventListener("click", showKidsDesigns);
@@ -1068,4 +1109,122 @@ function initKidsModal() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeKidsModal();
   });
+}
+
+
+/* ---------- Home slideshow: the category thumbnails fade in and drift ---------- */
+/* Category thumbnails for the hero slideshow and Explore our collection (images/Thumbnails/) */
+const THUMBNAIL_FOLDER = "images/Thumbnails/";
+const HERO_SLIDES = [
+  { file: "Thumbnail.jpg", eyebrow: "Just dropped · Volume 2", title: "Fresh tablecloths are here, and they are going fast", text: "New tablecloths in patchwork, lacework and everyday prints, each one stitched by hand." },
+  { file: "Patchwork-thumbnail.jpg", eyebrow: "Tablecloths", title: "Patchwork tablecloths", text: "Unique patchwork tablecloth for all occasions." },
+  { file: "Lacework-thumbnail.jpg", eyebrow: "Tablecloths", title: "Lacework tablecloths", text: "Cotton tablecloths finished with a soft lace border for festive tables." },
+  { file: "Dailywares-thumbnail.jpg", eyebrow: "Tablecloths", title: "Dailywares tablecloths", text: "Everyday tablecloths in bright prints, made for breakfast and family meals." },
+  { file: "Dasterkhwan_Thumbnail.jpg", eyebrow: "Kids Dasterkhwan", title: "Kids Dasterkhwan", text: "Cheerful dasterkhwans for little ones to share a meal, at home or on a picnic." },
+  { file: "Teacozy_Thumbnail.jpg", eyebrow: "Accessories", title: "Tea cozies", text: "Quilted tea cozies that keep the pot warm and add colour to the table." },
+  { file: "Breadcloth_Thumbnail.JPG", eyebrow: "Accessories", title: "Bread cloths", text: "Soft cotton cloths that keep bread warm, in patchwork and print." },
+  { file: "Potholder_Thumbnail.JPG", eyebrow: "Accessories", title: "Pot holders", text: "Quilted pot holders that protect your hands and add a little colour to the kitchen." }
+];
+
+/* Thumbnails load by their exact file name (no .JPG-first guessing), so the first slide shows at once */
+function thumbImg(src, alt, eager) {
+  const loading = eager ? "eager" : "lazy";
+  return `<img src="${escapeHTML(src)}" alt="${escapeHTML(alt || "")}" loading="${loading}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;display:block">`;
+}
+
+function renderHeroSlideshow() {
+  const box = document.getElementById("hero-slideshow");
+  if (!box) return;
+
+  const slides = HERO_SLIDES.map(s => ({ ...s, src: THUMBNAIL_FOLDER + s.file }));
+
+  box.innerHTML = `
+    ${slides.map((s, i) => `<div class="hs-slide">${thumbImg(s.src, s.title, i === 0)}</div>`).join("")}
+    <div class="hs-copy">
+      ${slides.map((s, i) => `<div class="hs-copy-item"><p class="collection-eyebrow">${escapeHTML(s.eyebrow)}</p><h1>${escapeHTML(s.title)}</h1><p class="hs-text">${escapeHTML(s.text)}</p></div>`).join("")}
+    </div>
+    <div class="hs-dots">${slides.map((s, i) => `<button type="button" data-hs="${i}" aria-label="Show ${escapeHTML(s.title)}"${i === 0 ? ' class="is-on"' : ""}></button>`).join("")}</div>`;
+
+  const slideEls = Array.from(box.querySelectorAll(".hs-slide"));
+  const copyEls = Array.from(box.querySelectorAll(".hs-copy-item"));
+  const dotEls = Array.from(box.querySelectorAll(".hs-dots button"));
+  const HOLD_MS = 7000;      // each slide after the first stays for 7 seconds
+  const FIRST_HOLD_MS = 3000; // the first slide stays for 3 seconds
+  let index = 0;
+  let timer = null;
+
+  function schedule() {
+    clearTimeout(timer);
+    timer = setTimeout(() => show(index + 1), index === 0 ? FIRST_HOLD_MS : HOLD_MS);
+  }
+
+  function show(i) {
+    index = (i + slideEls.length) % slideEls.length;
+    slideEls.forEach((el, n) => el.classList.toggle("is-on", n === index));
+    copyEls.forEach((el, n) => el.classList.toggle("is-on", n === index));
+    dotEls.forEach((el, n) => el.classList.toggle("is-on", n === index));
+    schedule();
+  }
+
+  // The first slide starts from the same state as the others and animates in once its photo is on screen
+  function activateFirst() {
+    slideEls[0].classList.add("is-on");
+    copyEls[0].classList.add("is-on");
+    dotEls[0].classList.add("is-on");
+    schedule();
+  }
+  const go = () => requestAnimationFrame(() => requestAnimationFrame(activateFirst));
+  const firstImg = slideEls[0] && slideEls[0].querySelector("img");
+  if (firstImg && !firstImg.complete) {
+    firstImg.addEventListener("load", go, { once: true });
+    firstImg.addEventListener("error", go, { once: true });
+  } else {
+    go();
+  }
+
+  box.querySelector(".hs-dots").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-hs]");
+    if (!b) return;
+    show(Number(b.dataset.hs));
+  });
+
+  // Load the other slides one at a time after the page has loaded, so the first slide is not held back
+  const queue = slides.slice(1).map(s => s.src);
+  function loadNext() {
+    const src = queue.shift();
+    if (!src) return;
+    const pre = new Image();
+    pre.onload = pre.onerror = loadNext;
+    pre.src = src;
+  }
+  if (document.readyState === "complete") loadNext();
+  else window.addEventListener("load", loadNext);
+}
+
+/* ---------- Explore Our Collections: one large thumbnail per category ---------- */
+function renderCollectionTiles() {
+  const box = document.getElementById("collect-grid");
+  if (!box) return;
+  const tiles = [
+    { label: "Tablecloths", src: THUMBNAIL_FOLDER + "Patchwork-thumbnail.jpg", cls: "tablecloth-open" },
+    { label: "Bread cloths", src: THUMBNAIL_FOLDER + "Breadcloth_Thumbnail.JPG", cls: "bread-open" },
+    { label: "Kids Dasterkhwan", src: THUMBNAIL_FOLDER + "Dasterkhwan_Thumbnail.jpg", cls: "kd-open" },
+    { label: "Tea cozies", src: THUMBNAIL_FOLDER + "Teacozy_Thumbnail.jpg", cls: "tea-open" },
+    { label: "Pot holders", src: THUMBNAIL_FOLDER + "Potholder_Thumbnail.JPG", cls: "pot-open" },
+    { label: "Patchwork Spreads", src: THUMBNAIL_FOLDER + "Spread_Thumbnail.jpg", href: "#spreads" }
+  ];
+  box.innerHTML = tiles.map(t => {
+    const inner = `<span class="collect-photo">${thumbImg(t.src, t.label)}</span><span class="collect-label">${escapeHTML(t.label)}</span>`;
+    return t.href
+      ? `<a class="collect-tile" href="${t.href}">${inner}</a>`
+      : `<button type="button" class="collect-tile ${t.cls}">${inner}</button>`;
+  }).join("");
+}
+
+/* ---------- Kids Dasterkhwan section: generic description and the thumbnail card ---------- */
+function renderKidsSection() {
+  const desc = document.getElementById("kids-desc");
+  const card = document.getElementById("kids-card");
+  if (desc) desc.textContent = KIDS_DASTERKHWAN_DESCRIPTION;
+  if (card) card.innerHTML = kidsThumbnailHTML();
 }

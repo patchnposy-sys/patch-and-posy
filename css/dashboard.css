@@ -137,3 +137,15 @@
 .dash-toast[data-state="success"]{ background: var(--teal, #1C8577); }
 .dash-toast[data-state="warning"]{ background: var(--mustard, #E0A83E); color: var(--brown); }
 .dash-locked{ font-size: 0.85rem; color: var(--brown-soft, #7a6a5c); font-style: normal; }
+
+/* ---------- Details tab: description, dimensions, care ---------- */
+.dash-details-table td{ vertical-align: top; }
+.dash-details-table{ min-width: 880px; }
+.dash-detail-input{
+  width: 100%; min-width: 180px;
+  font-family: inherit; font-size: 0.86rem; color: var(--ink);
+  padding: 8px 10px; border: 1.5px solid var(--brown); border-radius: 6px;
+  background: #fff; resize: vertical;
+}
+.dash-detail-input:focus{ outline: 2px solid var(--raspberry-deep); outline-offset: 1px; }
+

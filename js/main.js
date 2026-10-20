@@ -648,7 +648,7 @@ function showPotDesigns() {
   body.innerHTML = `
     <h3 class="bread-title">Pot Holders</h3>
     <p class="bread-description">${escapeHTML(POT_HOLDER_DESCRIPTION)}</p>
-    <p class="bread-hint">Choose a design to see it up close.</p>
+    <p class="bread-hint">Explore the collection to find your favorite.</p>
     <div class="bread-colour-grid">
       ${potProducts().map(p => `
         <button type="button" class="bread-colour" data-pot-id="${escapeHTML(p.id)}">
@@ -742,7 +742,7 @@ function showTeaDesigns() {
   body.innerHTML = `
     <h3 class="bread-title">Tea Cozies</h3>
     <p class="bread-description">${escapeHTML(TEA_COZY_DESCRIPTION)}</p>
-    <p class="bread-hint">Choose a design to see it up close.</p>
+    <p class="bread-hint">Explore the collection to find your favorite.</p>
     <div class="bread-colour-grid">
       ${teaProducts().map(p => `
         <button type="button" class="bread-colour" data-tea-id="${escapeHTML(p.id)}">
@@ -1005,7 +1005,33 @@ function closeSpreadsModal() {
   document.body.style.overflow = "";
 }
 
+function openSpreadsList() {
+  const overlay = document.getElementById("spreads-list-overlay");
+  const modal = document.getElementById("spreads-list-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.add("is-open");
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSpreadsList() {
+  const overlay = document.getElementById("spreads-list-overlay");
+  const modal = document.getElementById("spreads-list-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.remove("is-open");
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
 function initSpreadsModal() {
+  // Patchwork Spreads opens in its own dialog from the banner menu and the Explore tile.
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".spreads-open")) openSpreadsList();
+  });
+  document.getElementById("spreads-list-close")?.addEventListener("click", closeSpreadsList);
+  document.getElementById("spreads-list-overlay")?.addEventListener("click", closeSpreadsList);
   document.addEventListener("click", (e) => {
     const card = e.target.closest("[data-spread-id]");
     if (card) openSpreadDetail(card.dataset.spreadId);
@@ -1062,6 +1088,7 @@ function showKidsDesigns() {
 
   body.innerHTML = `
     <h3 class="bread-title">Kids Dasterkhwan</h3>
+    <p class="bread-description">${escapeHTML(KIDS_DASTERKHWAN_DESCRIPTION)}</p>
     <p class="bread-hint">Choose a design to see all of its photos.</p>
     <div class="bread-colour-grid">
       ${kidsProducts().map(p => `
@@ -1117,9 +1144,9 @@ function initKidsModal() {
 const THUMBNAIL_FOLDER = "images/Thumbnails/";
 const HERO_SLIDES = [
   { file: "Thumbnail.jpg", eyebrow: "Just dropped · Volume 2", title: "Fresh tablecloths are here, and they are going fast", text: "New tablecloths in patchwork, lacework and everyday prints, each one stitched by hand." },
-  { file: "Patchwork-thumbnail.jpg", eyebrow: "Tablecloths", title: "Patchwork tablecloths", text: "Unique patchwork tablecloth for all occasions." },
-  { file: "Lacework-thumbnail.jpg", eyebrow: "Tablecloths", title: "Lacework tablecloths", text: "Cotton tablecloths finished with a soft lace border for festive tables." },
-  { file: "Dailywares-thumbnail.jpg", eyebrow: "Tablecloths", title: "Dailywares tablecloths", text: "Everyday tablecloths in bright prints, made for breakfast and family meals." },
+  { file: "Patchwork-thumbnail.jpg", eyebrow: "Tablecloths", title: "Patchwork", text: "Unique patchwork tablecloth for all occasions." },
+  { file: "Lacework-thumbnail.jpg", eyebrow: "Tablecloths", title: "Lacework", text: "Cotton tablecloths finished with a soft lace border for festive tables." },
+  { file: "Dailywares-thumbnail.jpg", eyebrow: "Tablecloths", title: "Dailywares", text: "Everyday tablecloths in bright prints, made for breakfast and family meals." },
   { file: "Dasterkhwan_Thumbnail.jpg", eyebrow: "Kids Dasterkhwan", title: "Kids Dasterkhwan", text: "Cheerful dasterkhwans for little ones to share a meal, at home or on a picnic." },
   { file: "Teacozy_Thumbnail.jpg", eyebrow: "Accessories", title: "Tea cozies", text: "Quilted tea cozies that keep the pot warm and add colour to the table." },
   { file: "Breadcloth_Thumbnail.JPG", eyebrow: "Accessories", title: "Bread cloths", text: "Soft cotton cloths that keep bread warm, in patchwork and print." },
@@ -1149,7 +1176,7 @@ function renderHeroSlideshow() {
   const copyEls = Array.from(box.querySelectorAll(".hs-copy-item"));
   const dotEls = Array.from(box.querySelectorAll(".hs-dots button"));
   const HOLD_MS = 7000;      // each slide after the first stays for 7 seconds
-  const FIRST_HOLD_MS = 3000; // the first slide stays for 3 seconds
+  const FIRST_HOLD_MS = 5000; // the first slide stays for 5 seconds
   let index = 0;
   let timer = null;
 
@@ -1211,7 +1238,7 @@ function renderCollectionTiles() {
     { label: "Kids Dasterkhwan", src: THUMBNAIL_FOLDER + "Dasterkhwan_Thumbnail.jpg", cls: "kd-open" },
     { label: "Tea cozies", src: THUMBNAIL_FOLDER + "Teacozy_Thumbnail.jpg", cls: "tea-open" },
     { label: "Pot holders", src: THUMBNAIL_FOLDER + "Potholder_Thumbnail.JPG", cls: "pot-open" },
-    { label: "Patchwork Spreads", src: THUMBNAIL_FOLDER + "Spread_Thumbnail.jpg", href: "#spreads" }
+    { label: "Patchwork Spreads", src: THUMBNAIL_FOLDER + "Spread_Thumbnail.jpg", cls: "spreads-open" }
   ];
   box.innerHTML = tiles.map(t => {
     const inner = `<span class="collect-photo">${thumbImg(t.src, t.label)}</span><span class="collect-label">${escapeHTML(t.label)}</span>`;

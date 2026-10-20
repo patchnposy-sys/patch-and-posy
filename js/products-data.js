@@ -202,7 +202,7 @@ const TABLECLOTH_STYLES = [
     folder: "Patchwork Style",
     thumbnail: "Patchwork-thumbnail.jpg",
     price: 6000,
-    description: "A runner pieced in patchwork, with a matching border. Elegant and traditional, with a modern feel. Double layered for a better fall and fit, in high quality cotton fabric.",
+    description: "A beautifully crafted table runner featuring an intricate pieced design and a coordinating border, blending timeless elegance with a contemporary touch. Double-layered for a graceful drape and impeccable finish, it is made from premium-quality cotton fabric for a refined and sophisticated look.",
     codes: ["TC01", "TC02", "TC03"]
   },
   {
@@ -211,7 +211,7 @@ const TABLECLOTH_STYLES = [
     folder: "Lacework",
     thumbnail: "Lacework-thumbnail.jpg",
     price: 5000,
-    description: "A runner with lace and a lace border, in English style. Each design is slightly different. Double layered for a better fall and fit, in high quality cotton fabric.",
+    description: "A delicately crafted table runner featuring intricate lacework and a matching lace border, inspired by timeless English elegance. Each design offers its own distinctive charm. Double-layered for a graceful drape and refined finish, it is made from premium-quality cotton fabric.",
     codes: ["TC04", "TC05", "TC06", "TC07", "TC08", "TC09", "TC10"]
   },
   {
@@ -220,7 +220,7 @@ const TABLECLOTH_STYLES = [
     folder: "Dailywares",
     thumbnail: "Dailywares-thumbnail.jpg",
     price: 4000,
-    description: "Simple checked prints for a countryside feel and bright colour. Double layered for a better fall and fit, in high quality cotton fabric.",
+    description: "Featuring classic checked prints in cheerful colours, these table linens bring a fresh, countryside charm to everyday dining. Double-layered for a graceful drape and a polished finish, they are crafted from premium-quality cotton fabric for lasting comfort and style.",
     codes: ["TC11", "TC12", "TC13", "TC14"]
   }
 ];
@@ -243,6 +243,23 @@ const TABLECLOTH_DESCRIPTIONS = {
   TC14: "Peach and white checks with a cheerful countryside feel. Double layered for a better fall and fit on the table."
 };
 
+const TABLECLOTH_NAMES = {
+  TC01: "Violet Patchwork",
+  TC02: "Plum Triangles",
+  TC03: "Pink Gingham",
+  TC04: "Mustard Lace Stripe",
+  TC05: "Sage Blossom",
+  TC06: "Cream Embroidery",
+  TC07: "Navy Daisy",
+  TC08: "Holly Berry",
+  TC09: "Petite Bloom",
+  TC10: "Monochrome Geometric",
+  TC11: "Sage Check",
+  TC12: "Mustard Check",
+  TC13: "Taupe Check",
+  TC14: "Peach Check"
+};
+
 /* Builds one entry per design code. Each design can still be changed
    by hand: set its own price, tag ("AVAILABLE" / "SOLD" / other),
    description, dimensions or care text in this array after it is built. */
@@ -253,12 +270,12 @@ TABLECLOTH_STYLES.forEach((style) => {
     TABLECLOTH_DESIGNS.push({
       id: "DS-" + code,
       code: code,
-      name: code,
+      name: code + " · " + TABLECLOTH_NAMES[code],
       style: style.id,
       price: style.price,
       tag: code === "TC12" ? "SOLD" : "AVAILABLE",
       description: TABLECLOTH_DESCRIPTIONS[code] || "",
-      dimensions: "70 x 100 in",
+      dimensions: "70 x 100 inches",
       careInstructions: DEFAULT_CARE,
       photos: photos,
       card: photos[2]
@@ -365,23 +382,23 @@ const BREAD_CLOTH_THUMBNAIL = BREAD_CLOTH_FOLDER + "Mix.JPG";
 
 /* One description shared by all bread cloths (they are all the same
    construction; only the print differs). Shown once, in the popup. */
-const BREAD_CLOTH_DESCRIPTION = "A simple, good quality cloth. Use it to keep rotis warm off the tawa, or to line your bread basket on the dining table.";
+const BREAD_CLOTH_DESCRIPTION = "A versatile, everyday essential crafted from quality fabric to keep freshly made rotis warm or line your bread basket for an elegant table setting. Simple, practical, and thoughtfully designed for everyday dining.";
 
 const BREAD_CLOTHS = [
-  { id: "A-009", colour: "Blue",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"], photos: ["Blue1.JPG", "Blue2.JPG"] },
-  { id: "A-010", colour: "Grey",  swatch: ["#8A8F99", "#D9DCE1", "#F3ECDD"], photos: ["Grey1.JPG", "Grey2.JPG"] },
-  { id: "A-011", colour: "Red",   swatch: ["#C0396B", "#E8879C", "#F3ECDD"], photos: ["Red1.JPG", "Red2.JPG"] },
-  { id: "A-012", colour: "White", swatch: ["#F3ECDD", "#FBF7EE", "#C0396B"], photos: ["White1.JPG", "White2.JPG"] }
+  { id: "A-009", colour: "Blue", label: "Indigo Blue",  swatch: ["#1C3A5E", "#3E6B8A", "#F3ECDD"], photos: ["Blue1.JPG", "Blue2.JPG"] },
+  { id: "A-010", colour: "Grey", label: "Ash Grey",  swatch: ["#8A8F99", "#D9DCE1", "#F3ECDD"], photos: ["Grey1.JPG", "Grey2.JPG"] },
+  { id: "A-011", colour: "Red", label: "Rose Red",   swatch: ["#C0396B", "#E8879C", "#F3ECDD"], photos: ["Red1.JPG", "Red2.JPG"] },
+  { id: "A-012", colour: "White", label: "Ivory White", swatch: ["#F3ECDD", "#FBF7EE", "#C0396B"], photos: ["White1.JPG", "White2.JPG"] }
 ];
 
 BREAD_CLOTHS.forEach((b) => {
   const images = b.photos.map(file => BREAD_CLOTH_FOLDER + encodeURI(file));
   ACCESSORIES.push({
     id: b.id,
-    name: "Bread Cloth: " + b.colour,
+    name: "Bread Cloth: " + b.label,
     category: "Bread Cloths",
-    desc: "A simple, good quality cloth. Use it to keep rotis warm off the tawa, or to line your bread basket on the dining table.",
-    dimensions: "70 x 100 in",
+    desc: "A versatile, everyday essential crafted from quality fabric to keep freshly made rotis warm or line your bread basket for an elegant table setting. Simple, practical, and thoughtfully designed for everyday dining.",
+    dimensions: "70 x 100 inches",
     careInstructions: DEFAULT_CARE,
     price: 250,
     tag: "AVAILABLE",
@@ -401,12 +418,12 @@ const TEA_COZY_FOLDER = "images/V2-TeaCozies/";
 const TEA_COZY_THUMBNAIL = TEA_COZY_FOLDER + "Thumbnail.JPG";
 
 /* One description shared by all tea cozies. Shown once, in the popup. */
-const TEA_COZY_DESCRIPTION = "A quilted tea cozy for every tea break. It keeps your tea warm and comes in pretty floral and printed fabrics.";
+const TEA_COZY_DESCRIPTION = "A beautifully quilted tea cozy designed to keep your tea warm while adding a charming touch to every tea break. Available in an array of delightful floral and printed fabrics, each design brings its own character to your tea table.";
 
 /* Price is a placeholder (same as the old A-005 tea cozy) — set yours. */
 const TEA_COZIES = [
-  { id: "A-005", design: "Design 1", photos: ["TC1a.JPG", "TC1b.JPG"] },
-  { id: "A-024", design: "Design 2", photos: ["TC2a.JPG", "TC2b.JPG"] }
+  { id: "A-005", design: "Wildflower", photos: ["TC1a.JPG", "TC1b.JPG"] },
+  { id: "A-024", design: "Meadow", photos: ["TC2a.JPG", "TC2b.JPG"] }
 ];
 
 TEA_COZIES.forEach((t) => {
@@ -416,7 +433,7 @@ TEA_COZIES.forEach((t) => {
     name: "Tea Cozy: " + t.design,
     category: "Tea Cozies",
     desc: TEA_COZY_DESCRIPTION,
-    dimensions: "70 x 100 in",
+    dimensions: "70 x 100 inches",
     careInstructions: DEFAULT_CARE,
     price: 500,
     tag: "AVAILABLE",
@@ -437,22 +454,22 @@ const POT_HOLDER_THUMBNAIL = POT_HOLDER_FOLDER + "Thumbnail.JPG";
 
 /* One description shared by all pot holders (same construction;
    only the fabric differs). Shown once, in the popup. */
-const POT_HOLDER_DESCRIPTION = "A double-layered, heat-resistant pinch pot holder in high quality cotton fabric. It is as sturdy as it is pretty.";
+const POT_HOLDER_DESCRIPTION = "A thoughtfully crafted, double-layered pinch pot holder made from premium-quality cotton fabric for a sturdy, heat-resistant grip. Combining everyday practicality with charming designs, it brings a touch of style to your kitchen.";
 
 /* Edit the design names if you want to label them differently.
    Price is a placeholder (same as the old A-006 pot holder) — set yours. */
 const POT_HOLDERS = [
-  { id: "A-013", design: "Design 1",  photos: ["IMG_1391.JPG"] },
-  { id: "A-014", design: "Design 2",  photos: ["IMG_1392.JPG"] },
-  { id: "A-015", design: "Design 3",  photos: ["IMG_1393.JPG"] },
-  { id: "A-016", design: "Design 4",  photos: ["IMG_1394.JPG"] },
-  { id: "A-017", design: "Design 5",  photos: ["IMG_1395.JPG"] },
-  { id: "A-018", design: "Design 6",  photos: ["IMG_1396.JPG"] },
-  { id: "A-019", design: "Design 7",  photos: ["IMG_1397.JPG"] },
-  { id: "A-020", design: "Design 8",  photos: ["IMG_1398.JPG"] },
-  { id: "A-021", design: "Design 9",  photos: ["IMG_1399.JPG"] },
-  { id: "A-022", design: "Design 10", photos: ["IMG_1400.JPG"] },
-  { id: "A-023", design: "Design 11", photos: ["IMG_1401.JPG"] }
+  { id: "A-013", design: "Mustard Gingham",  photos: ["IMG_1391.JPG"] },
+  { id: "A-014", design: "Mint Blossom",  photos: ["IMG_1392.JPG"] },
+  { id: "A-015", design: "Red Paisley",  photos: ["IMG_1393.JPG"] },
+  { id: "A-016", design: "Lime Blossom",  photos: ["IMG_1394.JPG"] },
+  { id: "A-017", design: "Peach Gingham",  photos: ["IMG_1395.JPG"] },
+  { id: "A-018", design: "Aqua Sky",  photos: ["IMG_1396.JPG"] },
+  { id: "A-019", design: "Cherry Lilac",  photos: ["IMG_1397.JPG"] },
+  { id: "A-020", design: "Golden Gingham",  photos: ["IMG_1398.JPG"] },
+  { id: "A-021", design: "Midnight Black",  photos: ["IMG_1399.JPG"] },
+  { id: "A-022", design: "Grey Vine", photos: ["IMG_1400.JPG"] },
+  { id: "A-023", design: "Brown Swirl", photos: ["IMG_1401.JPG"] }
 ];
 
 POT_HOLDERS.forEach((h) => {
@@ -462,7 +479,7 @@ POT_HOLDERS.forEach((h) => {
     name: "Pot Holder: " + h.design,
     category: "Pot Holders",
     desc: POT_HOLDER_DESCRIPTION,
-    dimensions: "70 x 100 in",
+    dimensions: "70 x 100 inches",
     careInstructions: DEFAULT_CARE,
     price: 1200,
     tag: "AVAILABLE",
@@ -508,11 +525,11 @@ const KIDS_DASTERKHWAN_FOLDER = "images/V2-KidsDasterkhwan/";
 const KIDS_DASTERKHWAN_THUMBNAIL = KIDS_DASTERKHWAN_FOLDER + "Thumbnail.JPG";
 
 /* Shown on the collection card. */
-const KIDS_DASTERKHWAN_DESCRIPTION = "Bright colours and fun prints for little ones eating together with friends and cousins, at home or on a picnic. Three designs in high quality cotton fabric.";
+const KIDS_DASTERKHWAN_DESCRIPTION = "Made for little foodies, these cheerful kids' dastarkhwans bring a playful touch to family mealtimes. Featuring adorable food-inspired illustrations and crafted from quality cotton fabric, they make every meal a little more fun.";
 const KIDS_DASTERKHWANS = [
-  { id: "KD-001", name: "Kids Dasterkhwan: Design 1", desc: "A white cotton dasterkhwan printed with bright tomatoes in red, orange, yellow and green, with a mustard border. Cheerful colours for little ones sharing a meal with friends and cousins, at home or on a picnic.", price: 4500, tag: "AVAILABLE", thumbnail: "D1b.JPG", photos: ["D1a.JPG", "D1b.JPG", "D1c.JPG"] },
-  { id: "KD-002", name: "Kids Dasterkhwan: Design 2", desc: "A soft pink cotton dasterkhwan printed with fried eggs, with a white lace border. A playful print that makes breakfast and snack time fun for the kids.", price: 4500, tag: "AVAILABLE", thumbnail: "D2b.JPG", photos: ["D2a.JPG", "D2b.JPG", "D2c.JPG"] },
-  { id: "KD-003", name: "Kids Dasterkhwan: Design 3", desc: "A white cotton dasterkhwan printed with cakes and tarts in pink, red, green and yellow, with a coral border. Sweet colours for afternoon snacks and picnics with the cousins.", price: 4500, tag: "AVAILABLE", thumbnail: "D3b.JPG", photos: ["D3a.JPG", "D3b.JPG", "D3c.JPG"] }
+  { id: "KD-001", name: "Kids Dasterkhwan: Tomato Tales", desc: "A white cotton dasterkhwan printed with bright tomatoes in red, orange, yellow and green, with a mustard border. Cheerful colours for little ones sharing a meal with friends and cousins, at home or on a picnic.", price: 4500, tag: "AVAILABLE", thumbnail: "D1b.JPG", photos: ["D1a.JPG", "D1b.JPG", "D1c.JPG"] },
+  { id: "KD-002", name: "Kids Dasterkhwan: Sunny Side Up", desc: "A soft pink cotton dasterkhwan printed with fried eggs, with a white lace border. A playful print that makes breakfast and snack time fun for the kids.", price: 4500, tag: "AVAILABLE", thumbnail: "D2b.JPG", photos: ["D2a.JPG", "D2b.JPG", "D2c.JPG"] },
+  { id: "KD-003", name: "Kids Dasterkhwan: Little Cake Club", desc: "A white cotton dasterkhwan printed with cakes and tarts in pink, red, green and yellow, with a coral border. Sweet colours for afternoon snacks and picnics with the cousins.", price: 4500, tag: "AVAILABLE", thumbnail: "D3b.JPG", photos: ["D3a.JPG", "D3b.JPG", "D3c.JPG"] }
 ];
 
 KIDS_DASTERKHWANS.forEach((k) => {
@@ -523,7 +540,7 @@ KIDS_DASTERKHWANS.forEach((k) => {
     name: k.name,
     category: "Kids Dasterkhwan",
     desc: k.desc,
-    dimensions: "70 x 100 in",
+    dimensions: "70 x 100 inches",
     careInstructions: DEFAULT_CARE,
     price: k.price,
     tag: k.tag,

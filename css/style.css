@@ -149,7 +149,7 @@ header{
 }
 .hero-ctas{ display:flex; gap: 16px; margin-top: 34px; flex-wrap: wrap; }
 .btn-primary{
-  background: var(--raspberry-deep); color: var(--paper);
+  background: #A94468; color: var(--paper);
   padding: 14px 28px; border-radius: 999px; font-weight:700; font-size:0.95rem;
   box-shadow: 0 6px 0 var(--brown);
   border: none;
@@ -311,7 +311,7 @@ header{
   padding: 4px 9px; border-radius: 999px; z-index:2;
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
-.patch-tag-available{ background: var(--teal); color: var(--paper); }
+.patch-tag-available{ background: #3A8170; color: var(--paper); }
 
 .patch-info{ padding: 14px 6px 0; }
 .patch-info h3{ font-size: 1.05rem; font-weight:600; }
@@ -327,7 +327,7 @@ header{
 .patch-actions{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
 .btn-add-bag{
   display:inline-block; width:100%; text-align:center;
-  background: var(--raspberry-deep); color: var(--paper); border:none;
+  background: #A94468; color: var(--paper); border:none;
   padding: 10px 14px; border-radius: 999px; font-weight:700; font-size:0.85rem;
 }
 .btn-add-bag:hover{ background: var(--brown); }
@@ -580,6 +580,15 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
 .bread-modal{ width: min(760px, 94vw); max-height: 88vh; overflow-y: auto; }
 .bread-inner{ padding: 26px 22px; }
 .bread-inner .drawer-close{ position:absolute; top:10px; right:14px; }
+/* One close button for every dialog: a round button at the top right corner */
+.modal .drawer-close{
+  position:absolute; top:12px; right:12px; z-index:2;
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(94,77,98,0.08); color: var(--brown);
+  font-size:1.1rem; line-height:1;
+}
+.modal .drawer-close:hover{ background: rgba(94,77,98,0.16); }
 .bread-title{ font-size:1.35rem; margin: 0 0 6px; padding-right: 30px; }
 .bread-hint{ margin-bottom: 16px; }
 .bread-colour-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; }
@@ -702,7 +711,7 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
   font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
   padding:3px 8px; border-radius:999px; background:#E8E0CC; color:#8C7C91;
 }
-.tc-tag-available{ background: var(--teal); color: var(--paper); }
+.tc-tag-available{ background: #3A8170; color: var(--paper); }
 .tc-detail{ margin-top:18px; display:grid; gap:16px; }
 .tc-section h4{ font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; color:#8C7C91; margin-bottom:6px; }
 .tc-section p{ line-height:1.6; }

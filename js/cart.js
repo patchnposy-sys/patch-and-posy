@@ -187,6 +187,11 @@ function renderCartDrawer() {
   if (checkoutBtn) {
     checkoutBtn.addEventListener("click", () => {
       closeCartDrawer();
+      // Close any product or category dialog left open, so the checkout form is shown on its own
+      [closeLightbox, closeBreadModal, closePotModal, closeTeaModal, closeTableclothModal,
+       closeSpreadsModal, closeSpreadsList, closeKidsModal].forEach((fn) => {
+        if (typeof fn === "function") fn();
+      });
       openCheckoutModal();
     });
   }

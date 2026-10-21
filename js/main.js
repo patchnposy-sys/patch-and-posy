@@ -1233,7 +1233,7 @@ function renderCollectionTiles() {
   const box = document.getElementById("collect-grid");
   if (!box) return;
   const tiles = [
-    { label: "Tablecloths", src: THUMBNAIL_FOLDER + "Patchwork-thumbnail.jpg", cls: "tablecloth-open" },
+    { label: "Tablecloths", src: "images/V2-Tablecloths/Thumbnail.jpg", cls: "tablecloth-open" },
     { label: "Bread cloths", src: THUMBNAIL_FOLDER + "Breadcloth_Thumbnail.JPG", cls: "bread-open" },
     { label: "Kids Dasterkhwan", src: THUMBNAIL_FOLDER + "Dasterkhwan_Thumbnail.jpg", cls: "kd-open" },
     { label: "Tea cozies", src: THUMBNAIL_FOLDER + "Teacozy_Thumbnail.jpg", cls: "tea-open" },

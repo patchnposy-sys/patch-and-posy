@@ -218,23 +218,28 @@
     <div class="checkout-summary" id="checkout-summary"></div>
 
     <form id="checkout-form" class="checkout-form">
+      <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">
+        <label for="checkout-website">Leave this empty</label>
+        <input id="checkout-website" type="text" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
       <label for="checkout-name">Full name</label>
-      <input id="checkout-name" type="text" required autocomplete="name">
+      <input id="checkout-name" type="text" required autocomplete="name" maxlength="80">
 
       <label for="checkout-email">Email</label>
-      <input id="checkout-email" type="email" required autocomplete="email">
+      <input id="checkout-email" type="email" required autocomplete="email" maxlength="120">
 
       <label for="checkout-phone">Phone number</label>
-      <input id="checkout-phone" type="tel" required autocomplete="tel" placeholder="03xx-xxxxxxx">
+      <input id="checkout-phone" type="tel" required autocomplete="tel" placeholder="03xx-xxxxxxx" maxlength="20" pattern="(\+92|0092|0)?3[0-9]{2}[\- ]?[0-9]{7}" title="Enter a Pakistani mobile number, for example 03xx-xxxxxxx">
 
       <label for="checkout-address">Delivery address</label>
-      <textarea id="checkout-address" rows="3" required autocomplete="street-address"></textarea>
+      <textarea id="checkout-address" rows="3" required autocomplete="street-address" maxlength="200"></textarea>
 
       <label for="checkout-city">City</label>
-      <input id="checkout-city" type="text" required autocomplete="address-level2" placeholder="Karachi">
+      <input id="checkout-city" type="text" required autocomplete="address-level2" placeholder="Karachi" maxlength="60">
 
       <label for="checkout-notes">Order notes (optional)</label>
-      <textarea id="checkout-notes" rows="2" placeholder="Any special instructions"></textarea>
+      <textarea id="checkout-notes" rows="2" placeholder="Any special instructions" maxlength="500"></textarea>
 
       <p class="checkout-payment-note">After you place your order, our team will contact you by call or WhatsApp to confirm it. Payment is required after confirmation. Delivery charges will be discussed at that time.</p>
 
@@ -339,11 +344,13 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-check-compat.js"></script>
 <!-- EmailJS (order confirmation + admin notification emails) -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script src="js/store-config.js"></script>
 <script src="js/firebase-config.js"></script>
+<script src="js/app-check.js"></script>
 <script src="js/emailjs-config.js"></script>
 <script src="js/products-data.js"></script>
 <script src="js/cart.js"></script>

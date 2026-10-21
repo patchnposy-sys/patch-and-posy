@@ -39,7 +39,9 @@
   max-width: 1200px; margin:0 auto; padding: 18px 28px 0;
   display:flex; align-items:center; justify-content:space-between;
 }
-.dash-brand{ font-family:'Fraunces',serif; font-weight:700; color: var(--raspberry-deep); font-size:1.1rem; }
+.dash-logo{ display:block; height:64px; width:auto; border-radius:50%; }
+.dash-login-mark .dash-logo{ height:64px; margin-bottom:4px; }
+.dash-brand{ display:flex; align-items:center; }
 .dash-header-right{ display:flex; align-items:center; gap:14px; }
 .dash-user-email{ font-size:0.85rem; color: var(--brown-soft); }
 .dash-tabs{ max-width: 1200px; margin:0 auto; padding: 14px 28px 0; display:flex; gap:6px; }

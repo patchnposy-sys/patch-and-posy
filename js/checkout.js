@@ -59,11 +59,24 @@ function generateOrderId() {
 }
 
 function isValidEmailAddress(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  return value.length <= 120 && /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/.test(value);
+}
+
+/* Pakistani mobile numbers only: 03xx xxxxxxx, optionally written as +92 or 0092 */
+function normalisePhone(value) {
+  let digits = String(value).replace(/[\s\-()]/g, "");
+  if (digits.startsWith("+92")) digits = "0" + digits.slice(3);
+  else if (digits.startsWith("0092")) digits = "0" + digits.slice(4);
+  return digits;
 }
 
 function isValidPhone(value) {
-  return /^[0-9+\-\s()]{7,20}$/.test(value);
+  return /^03[0-9]{9}$/.test(normalisePhone(value));
+}
+
+/* Removes angle brackets (no HTML can be typed in) and caps the length */
+function cleanText(value, max) {
+  return String(value).replace(/[<>]/g, "").trim().slice(0, max);
 }
 
 async function submitOrder(event) {
@@ -73,12 +86,19 @@ async function submitOrder(event) {
   const statusEl = document.getElementById("checkout-status");
   const submitBtn = form.querySelector('button[type="submit"]');
 
-  const name = form.querySelector("#checkout-name").value.trim();
+  // Hidden field that people never see: only automated form-fillers complete it
+  const honeypot = form.querySelector("#checkout-website");
+  if (honeypot && honeypot.value.trim() !== "") {
+    showCheckoutStatus("Sorry, we could not place your order. Please try again.", "error");
+    return;
+  }
+
+  const name = cleanText(form.querySelector("#checkout-name").value, 80);
   const email = form.querySelector("#checkout-email").value.trim();
   const phone = form.querySelector("#checkout-phone").value.trim();
-  const address = form.querySelector("#checkout-address").value.trim();
-  const city = form.querySelector("#checkout-city").value.trim();
-  const notes = form.querySelector("#checkout-notes").value.trim();
+  const address = cleanText(form.querySelector("#checkout-address").value, 200);
+  const city = cleanText(form.querySelector("#checkout-city").value, 60);
+  const notes = cleanText(form.querySelector("#checkout-notes").value, 500);
 
   if (!name || !address || !city) {
     showCheckoutStatus("Please fill in your name, address, and city.", "error");
@@ -109,7 +129,7 @@ async function submitOrder(event) {
     status: "new",
     paymentMethod: "pay_after_confirmation",
     paymentStatus: "pending",
-    customer: { name, email, phone, address, city },
+    customer: { name, email, phone: normalisePhone(phone), address, city },
     items: cart,
     subtotal,
     deliveryCharge,

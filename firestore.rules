@@ -1,0 +1,84 @@
+rules_version = '2';
+
+// PATCH & POSY — Firestore security rules
+// Paste this whole file into Firebase Console → Firestore Database → Rules → Publish.
+//
+// What it does:
+//  - Anyone can read the product status, prices and details shown on the website.
+//  - Anyone can place an order, but only if it has the exact expected fields,
+//    a valid Pakistani mobile number, a valid email, and sensible lengths.
+//  - Only the signed-in admin can read, change or delete orders, and change products.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    function validText(value, max) {
+      return value is string && value.size() > 0 && value.size() <= max;
+    }
+
+    function validEmail(value) {
+      return value is string
+        && value.size() <= 120
+        && value.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$');
+    }
+
+    // The website stores phone numbers as 11 digits, for example 03001234567
+    function validPhone(value) {
+      return value is string && value.matches('^03[0-9]{9}$');
+    }
+
+    function validCustomer(c) {
+      return c is map
+        && c.keys().hasOnly(['name', 'email', 'phone', 'address', 'city'])
+        && validText(c.name, 80)
+        && validEmail(c.email)
+        && validPhone(c.phone)
+        && validText(c.address, 200)
+        && validText(c.city, 60);
+    }
+
+    function validNewOrder(d) {
+      return d.keys().hasOnly([
+          'orderId', 'createdAt', 'status', 'paymentMethod', 'paymentStatus',
+          'customer', 'items', 'subtotal', 'deliveryCharge', 'total', 'notes'
+        ])
+        && validText(d.orderId, 40)
+        && validText(d.createdAt, 40)
+        && d.status == 'new'
+        && d.paymentMethod == 'pay_after_confirmation'
+        && d.paymentStatus == 'pending'
+        && validCustomer(d.customer)
+        && d.items is list && d.items.size() >= 1 && d.items.size() <= 20
+        && d.subtotal is number && d.subtotal >= 0 && d.subtotal <= 1000000
+        && d.deliveryCharge is number && d.deliveryCharge >= 0 && d.deliveryCharge <= 1000000
+        && d.total is number && d.total >= 0 && d.total <= 1000000
+        && d.notes is string && d.notes.size() <= 500;
+    }
+
+    // Orders: anyone may add a valid one; only the admin may read or change them
+    match /orders/{orderId} {
+      allow create: if validNewOrder(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Products shown on the website: public read, admin write only
+    match /productStatus/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /productPrices/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /productDetails/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Everything else is closed
+  }
+}

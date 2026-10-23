@@ -20,21 +20,24 @@ function saveCart(cart) {
   updateCartBadge();
 }
 
-/* Only bread cloths can be bought in more than one. Up to 4 of each design.
-   Every other product is always 1. */
+/* Only bread cloths and tea cozies can be bought in more than one, and their stock is counted.
+   The most that can go in one order for each design is set here. Every other product is always 1. */
 const BREAD_MAX_QTY = 4;
+const TEA_MAX_QTY = 3;
+const STOCK_TRACKED_MAX = { "Bread Cloths": BREAD_MAX_QTY, "Tea Cozies": TEA_MAX_QTY };
 
-/* Bread cloths are limited by the stock left for each design (and never more than 4).
+/* Stock-counted products are limited by the stock left for each design (and never more than the per-order cap).
    Everything else is always 1. */
 function maxQtyFor(product) {
-  if (!product || product.category !== "Bread Cloths") return 1;
-  return Math.min(BREAD_MAX_QTY, breadStockOf(product));
+  const cap = product ? STOCK_TRACKED_MAX[product.category] : undefined;
+  if (!cap) return 1;
+  return Math.min(cap, breadStockOf(product));
 }
 
-/* True for products whose stock is counted (bread cloths). Others are sold out after one order. */
+/* True for products whose stock is counted (bread cloths and tea cozies). Others are sold out after one order. */
 function isStockTracked(item) {
   const p = typeof getAllProducts === "function" ? getAllProducts().find((x) => x.id === item.id) : null;
-  return !!p && p.category === "Bread Cloths";
+  return !!p && !!STOCK_TRACKED_MAX[p.category];
 }
 
 function addToCart(product, quantity = 1) {

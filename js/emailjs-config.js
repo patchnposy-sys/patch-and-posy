@@ -93,7 +93,8 @@ function resolveEmailImageUrl(src) {
     const m = String(src).match(/\.[^./]+$/);
     const base = m ? src.slice(0, -m[0].length) : src;
     const candidates = [...EMAIL_IMAGE_EXTENSIONS.map((ext) => base + ext), src];
-    const origin = window.location.origin + "/";
+    // Always the live website, so email apps can load the photos (the dev preview is protected)
+    const origin = "https://patchandposy.com.pk/";
     let i = 0;
 
     const tryNext = () => {

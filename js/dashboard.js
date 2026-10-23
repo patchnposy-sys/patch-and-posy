@@ -617,7 +617,7 @@ function priceRowHTML(p) {
           data-price-id="${escapeHTML(p.id)}" value="${pending !== undefined ? pending : ""}"
           placeholder="Leave blank to keep">
       </td>
-      <td>${p.category === "Bread Cloths" ? stockCellHTML(p) : "—"}</td>
+      <td>${p.category === "Bread Cloths" || p.category === "Tea Cozies" ? stockCellHTML(p) : "—"}</td>
     </tr>`;
 }
 

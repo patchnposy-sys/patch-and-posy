@@ -289,14 +289,24 @@ function closeBreadModal() {
   document.body.style.overflow = "";
 }
 
-function showBreadColours() {
+/* A bread cloth or tea cozy design with no stock left shows SOLD on its grid tile */
+function markSoldOutTiles(root) {
+  root.querySelectorAll("[data-colour-id], [data-tea-id]").forEach((btn) => {
+    const id = btn.dataset.colourId || btn.dataset.teaId;
+    const tagEl = btn.querySelector(`[data-tag-for="${id}"]`);
+    if (!tagEl || breadStockOf({ id }) > 0) return;
+    tagEl.textContent = "SOLD";
+    tagEl.classList.remove("patch-tag-available", "tc-tag-available");
+  });
+}
+
+async function showBreadColours() {
   const body = document.getElementById("bread-body");
   if (!body) return;
 
   body.innerHTML = `
     <h3 class="bread-title">Bread Cloths</h3>
     <p class="bread-description">${escapeHTML(BREAD_CLOTH_DESCRIPTION)}</p>
-    <p class="bread-hint">Choose a colour to see the designs.</p>
     <div class="bread-colour-grid">
       ${breadProducts().map(p => `
         <button type="button" class="bread-colour" data-colour-id="${escapeHTML(p.id)}">
@@ -308,6 +318,10 @@ function showBreadColours() {
   body.querySelectorAll("[data-colour-id]").forEach((btn) => {
     btn.addEventListener("click", () => showBreadDetail(btn.dataset.colourId));
   });
+
+  await loadLiveData();
+  await refreshLiveStock();
+  markSoldOutTiles(body);
 }
 
 async function showBreadDetail(id) {
@@ -320,7 +334,7 @@ async function showBreadDetail(id) {
 
   const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
   const stock = breadStockOf(p);
-  const max = Math.min(BREAD_MAX_QTY, stock);
+  const max = maxQtyFor(p);
   const available = isLiveAvailable(p) && stock > 0;
   const stockHTML = stock > 0
     ? `<p class="bread-stock">In stock: <strong>${stock}</strong></p>`
@@ -350,6 +364,13 @@ async function showBreadDetail(id) {
   setupBreadQuantity(body, max);
   attachAddToBagHandlers();
   applyLiveProductStatuses();
+  // A bread cloth with no stock left shows SOLD, even if its product tag says AVAILABLE
+  if (stock < 1) {
+    body.querySelectorAll(`[data-tag-for="${p.id}"]`).forEach((tagEl) => {
+      tagEl.textContent = "SOLD";
+      tagEl.classList.remove("patch-tag-available", "tc-tag-available");
+    });
+  }
 }
 
 /* Quantity box for bread cloths: 1 up to the lower of BREAD_MAX_QTY and the stock left */
@@ -715,7 +736,6 @@ function showPotDesigns() {
   body.innerHTML = `
     <h3 class="bread-title">Pot Holders</h3>
     <p class="bread-description">${escapeHTML(POT_HOLDER_DESCRIPTION)}</p>
-    <p class="bread-hint">Explore the collection to find your favorite.</p>
     <div class="bread-colour-grid">
       ${potProducts().map(p => `
         <button type="button" class="bread-colour" data-pot-id="${escapeHTML(p.id)}">
@@ -802,14 +822,13 @@ function closeTeaModal() {
   document.body.style.overflow = "";
 }
 
-function showTeaDesigns() {
+async function showTeaDesigns() {
   const body = document.getElementById("tea-body");
   if (!body) return;
 
   body.innerHTML = `
     <h3 class="bread-title">Tea Cozies</h3>
     <p class="bread-description">${escapeHTML(TEA_COZY_DESCRIPTION)}</p>
-    <p class="bread-hint">Explore the collection to find your favorite.</p>
     <div class="bread-colour-grid">
       ${teaProducts().map(p => `
         <button type="button" class="bread-colour" data-tea-id="${escapeHTML(p.id)}">
@@ -821,14 +840,35 @@ function showTeaDesigns() {
   body.querySelectorAll("[data-tea-id]").forEach((btn) => {
     btn.addEventListener("click", () => showTeaDetail(btn.dataset.teaId));
   });
+
+  await loadLiveData();
+  await refreshLiveStock();
+  markSoldOutTiles(body);
 }
 
-function showTeaDetail(id) {
+async function showTeaDetail(id) {
   const body = document.getElementById("tea-body");
   const p = teaProducts().find(x => x.id === id);
   if (!body || !p) return;
 
+  await loadLiveData();
+  await refreshLiveStock();
+
   const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
+  const stock = breadStockOf(p);
+  const max = maxQtyFor(p);
+  const available = isLiveAvailable(p) && stock > 0;
+  const stockHTML = stock > 0
+    ? `<p class="bread-stock">In stock: <strong>${stock}</strong></p>`
+    : `<p class="bread-stock bread-stock-out"><strong>Sold out</strong></p>`;
+  const qtyHTML = available ? `
+    <div class="cart-qty bread-qty">
+      <span>Quantity</span>
+      <button type="button" class="qty-btn" data-qty-action="dec">−</button>
+      <span data-qty-value>1</span>
+      <button type="button" class="qty-btn" data-qty-action="inc">+</button>
+    </div>
+    <p class="bread-hint">Up to ${max} for each design.</p>` : "";
 
   body.innerHTML = `
     <button type="button" class="bread-back" id="tea-back">← All designs</button>
@@ -837,13 +877,22 @@ function showTeaDetail(id) {
       ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
+    ${stockHTML}
     ${tileStatusHTML(p)}
     ${detailBlocksHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${qtyHTML}${buyActionsHTML(p.id, available, "Add to bag")}</div>`;
 
   document.getElementById("tea-back").addEventListener("click", showTeaDesigns);
+  setupBreadQuantity(body, max);
   attachAddToBagHandlers();
   applyLiveProductStatuses();
+  // A tea cozy with no stock left shows SOLD, even if its product tag says AVAILABLE
+  if (stock < 1) {
+    body.querySelectorAll(`[data-tag-for="${p.id}"]`).forEach((tagEl) => {
+      tagEl.textContent = "SOLD";
+      tagEl.classList.remove("patch-tag-available", "tc-tag-available");
+    });
+  }
 }
 
 function initTeaModal() {
@@ -943,7 +992,6 @@ function showTableclothStyles() {
   if (!body) return;
   body.innerHTML = `
     <h3 class="bread-title">Tablecloths · Volume 2</h3>
-    <p class="bread-hint">Tap a design to see its photos, description and price.</p>
     ${tableclothStyles().map(s => `
       <section class="tc-style-section">
         <h4 class="tc-style-title">${escapeHTML(s.name)}</h4>
@@ -1168,7 +1216,6 @@ function showKidsDesigns() {
   body.innerHTML = `
     <h3 class="bread-title">Kids Dasterkhwan</h3>
     <p class="bread-description">${escapeHTML(KIDS_DASTERKHWAN_DESCRIPTION)}</p>
-    <p class="bread-hint">Choose a design to see all of its photos.</p>
     <div class="bread-colour-grid">
       ${kidsProducts().map(p => `
         <button type="button" class="bread-colour" data-kd-id="${escapeHTML(p.id)}">

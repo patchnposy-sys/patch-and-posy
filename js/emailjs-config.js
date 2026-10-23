@@ -26,8 +26,8 @@
 const EMAILJS_CONFIG = {
   publicKey: "Lv8oFlb_LkY2ZJdUU",
   serviceId: "service_80onzwl",
-  customerTemplateId: "template_bqn9b18",
-  adminTemplateId: "template_agzmk8e",
+  customerTemplateId: "template_agzmk8e",
+  adminTemplateId: "template_bqn9b18",
   statusTemplateId: "PASTE_YOUR_STATUS_TEMPLATE_ID"
 };
 

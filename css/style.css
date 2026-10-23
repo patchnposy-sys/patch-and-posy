@@ -577,7 +577,8 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
   .event-gallery{ grid-template-columns: repeat(2, 1fr); }
 }
 /* ---------- Bread cloths popup ---------- */
-.bread-modal{ width: min(760px, 94vw); max-height: 88vh; overflow-y: auto; }
+.bread-modal{ width: min(760px, 94vw); max-height: 88vh; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.bread-modal::-webkit-scrollbar{ display: none; }
 .bread-inner{ padding: 26px 22px; }
 .bread-inner .drawer-close{ position:absolute; top:10px; right:14px; }
 .bread-title{ font-size:1.35rem; margin: 0 0 6px; padding-right: 30px; }
@@ -594,18 +595,18 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
   background:none; border:none; cursor:pointer; font:inherit; color:inherit;
   padding:0; margin-bottom:12px; text-decoration:underline;
 }
+/* All photos show at once, two per row, so nothing scrolls sideways */
 .bread-photos{
-  display:flex; gap:12px; overflow-x:auto; scroll-snap-type: x mandatory;
-  padding-bottom:6px; margin-bottom:14px;
+  display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px;
+  margin-bottom:14px; min-width:0;
 }
 .bread-photos img{
-  flex: 0 0 85%; width:85%; aspect-ratio: 3 / 4; object-fit:cover;
-  border-radius:8px; scroll-snap-align: center;
+  width:100%; min-width:0; height:auto; border-radius:8px;
 }
-@media (min-width: 700px){
-  .bread-photos img{ flex: 0 0 calc(50% - 6px); width: calc(50% - 6px); }
-}
+.bread-buy{ min-width:0; }
 .bread-buy .patch-actions{ margin-top:6px; }
+.qty-btn:disabled{ opacity:.35; cursor:default; }
+.bread-inner, .tc-detail, .tc-section p{ min-width:0; overflow-wrap:anywhere; }
 .bread-description{ margin-bottom:14px; line-height:1.6; }
 
 

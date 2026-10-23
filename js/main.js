@@ -324,11 +324,8 @@ async function showBreadColours() {
   markSoldOutTiles(body);
 }
 
-async function showBreadDetail(id) {
-  const body = document.getElementById("bread-body");
-  const p = breadProducts().find(x => x.id === id);
-  if (!body || !p) return;
-
+/* One layout for every bread cloth and tea cozy popup, so the parts sit in the same place for each design */
+async function openStockDetail(body, p, backId, backLabel, backAction) {
   await loadLiveData();
   await refreshLiveStock();
 
@@ -336,41 +333,48 @@ async function showBreadDetail(id) {
   const stock = breadStockOf(p);
   const max = maxQtyFor(p);
   const available = isLiveAvailable(p) && stock > 0;
-  const stockHTML = stock > 0
-    ? `<p class="bread-stock">In stock: <strong>${stock}</strong></p>`
-    : `<p class="bread-stock bread-stock-out"><strong>Sold out</strong></p>`;
-  const qtyHTML = available ? `
-    <div class="cart-qty bread-qty">
-      <span>Quantity</span>
-      <button type="button" class="qty-btn" data-qty-action="dec">−</button>
-      <span data-qty-value>1</span>
-      <button type="button" class="qty-btn" data-qty-action="inc">+</button>
-    </div>
-    <p class="bread-hint">Up to ${max} for each design.</p>` : "";
 
   body.innerHTML = `
-    <button type="button" class="bread-back" id="bread-back">← All colours</button>
+    <button type="button" class="bread-back" id="${backId}">${backLabel}</button>
     <h3 class="bread-title">${escapeHTML(p.name)}</h3>
     <div class="bread-photos tc-zoom">
       ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
-    ${stockHTML}
+    <p class="bread-stock${stock > 0 ? "" : " bread-stock-out"}">${stock > 0 ? `In stock: <strong>${stock}</strong>` : "<strong>Sold out</strong>"}</p>
     ${tileStatusHTML(p)}
     ${detailBlocksHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${qtyHTML}${buyActionsHTML(p.id, available, "Add to bag")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
+      <div class="cart-qty bread-qty">
+        <span>Quantity</span>
+        <button type="button" class="qty-btn" data-qty-action="dec"${available ? "" : " disabled"}>−</button>
+        <span data-qty-value>1</span>
+        <button type="button" class="qty-btn" data-qty-action="inc"${available ? "" : " disabled"}>+</button>
+      </div>
+      <p class="bread-hint">${available ? `Up to ${max} for each design.` : ""}</p>
+      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
+        <button type="button" class="btn-add-bag${available ? "" : " btn-add-bag-disabled"}" data-product-id="${escapeHTML(p.id)}"${available ? "" : " disabled"}>Add to bag</button>
+      </div>
+    </div>`;
 
-  document.getElementById("bread-back").addEventListener("click", showBreadColours);
-  setupBreadQuantity(body, max);
+  document.getElementById(backId).addEventListener("click", backAction);
+  if (available) setupBreadQuantity(body, max);
   attachAddToBagHandlers();
-  applyLiveProductStatuses();
-  // A bread cloth with no stock left shows SOLD, even if its product tag says AVAILABLE
+  await applyLiveProductStatuses();
+  // No stock left: show SOLD, even though the product's own tag says AVAILABLE
   if (stock < 1) {
     body.querySelectorAll(`[data-tag-for="${p.id}"]`).forEach((tagEl) => {
       tagEl.textContent = "SOLD";
       tagEl.classList.remove("patch-tag-available", "tc-tag-available");
     });
   }
+}
+
+async function showBreadDetail(id) {
+  const body = document.getElementById("bread-body");
+  const p = breadProducts().find(x => x.id === id);
+  if (!body || !p) return;
+  await openStockDetail(body, p, "bread-back", "← All colours", showBreadColours);
 }
 
 /* Quantity box for bread cloths: 1 up to the lower of BREAD_MAX_QTY and the stock left */
@@ -850,49 +854,7 @@ async function showTeaDetail(id) {
   const body = document.getElementById("tea-body");
   const p = teaProducts().find(x => x.id === id);
   if (!body || !p) return;
-
-  await loadLiveData();
-  await refreshLiveStock();
-
-  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
-  const stock = breadStockOf(p);
-  const max = maxQtyFor(p);
-  const available = isLiveAvailable(p) && stock > 0;
-  const stockHTML = stock > 0
-    ? `<p class="bread-stock">In stock: <strong>${stock}</strong></p>`
-    : `<p class="bread-stock bread-stock-out"><strong>Sold out</strong></p>`;
-  const qtyHTML = available ? `
-    <div class="cart-qty bread-qty">
-      <span>Quantity</span>
-      <button type="button" class="qty-btn" data-qty-action="dec">−</button>
-      <span data-qty-value>1</span>
-      <button type="button" class="qty-btn" data-qty-action="inc">+</button>
-    </div>
-    <p class="bread-hint">Up to ${max} for each design.</p>` : "";
-
-  body.innerHTML = `
-    <button type="button" class="bread-back" id="tea-back">← All designs</button>
-    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
-    <div class="bread-photos tc-zoom">
-      ${photos.map(src => imgTag(src, p.name)).join("")}
-    </div>
-    <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
-    ${stockHTML}
-    ${tileStatusHTML(p)}
-    ${detailBlocksHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${qtyHTML}${buyActionsHTML(p.id, available, "Add to bag")}</div>`;
-
-  document.getElementById("tea-back").addEventListener("click", showTeaDesigns);
-  setupBreadQuantity(body, max);
-  attachAddToBagHandlers();
-  applyLiveProductStatuses();
-  // A tea cozy with no stock left shows SOLD, even if its product tag says AVAILABLE
-  if (stock < 1) {
-    body.querySelectorAll(`[data-tag-for="${p.id}"]`).forEach((tagEl) => {
-      tagEl.textContent = "SOLD";
-      tagEl.classList.remove("patch-tag-available", "tc-tag-available");
-    });
-  }
+  await openStockDetail(body, p, "tea-back", "← All designs", showTeaDesigns);
 }
 
 function initTeaModal() {

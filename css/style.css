@@ -733,6 +733,10 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
 /* ---------- Lightbox sits above the product popups and shows the whole photo ---------- */
 #lightbox-overlay{ z-index: 110; }
 #lightbox-modal{ z-index: 111; }
+
+/* Checkout and order confirmation sit above the product popups; the basket drawer stays on top (130/131) */
+#checkout-overlay, #confirm-overlay{ z-index: 120; }
+#checkout-modal, #confirm-modal{ z-index: 121; }
 .lightbox-inner img{
   width: 100% !important; max-width: 100%; max-height: 85vh;
   height: auto; margin: 0 auto; display: block; object-fit: contain;

@@ -94,7 +94,7 @@ function productCardHTML(product) {
     : "";
 
   const photoStyle = product.image
-    ? `background-image:url('${escapeHTML(product.image)}'); background-size:cover; background-position:center;`
+    ? `background-image:url('${escapeHTML(smallPath(product.image))}'); background-size:cover; background-position:center;`
     : `background: linear-gradient(135deg, ${(product.swatch || ["#E0A83E", "#C0396B"]).join(", ")});`;
 
   const actionHTML = buyActionsHTML(product.id, isAvailable, "Add to bag");
@@ -176,7 +176,7 @@ function renderEventGallery(photos) {
   gallery.innerHTML = photos.map((photo) => `
     <figure class="event-card">
       <button type="button" class="event-photo" data-image="${escapeHTML(photo.image)}" data-caption="${escapeHTML(photo.caption || "")}">
-        <img src="${escapeHTML(photo.image)}" alt="${escapeHTML(photo.caption || "Event photo")}" loading="lazy">
+        <img src="${escapeHTML(smallPath(photo.image))}" alt="${escapeHTML(photo.caption || "Event photo")}" loading="lazy">
       </button>
       <figcaption class="event-caption">${escapeHTML(photo.caption || "")}</figcaption>
     </figure>
@@ -187,6 +187,7 @@ function renderEventGallery(photos) {
   });
 }
 
+let lightboxToken = 0;
 function openLightbox(imageSrc, caption) {
   const overlay = document.getElementById("lightbox-overlay");
   const modal = document.getElementById("lightbox-modal");
@@ -194,9 +195,29 @@ function openLightbox(imageSrc, caption) {
   const captionEl = document.getElementById("lightbox-caption");
   if (!overlay || !modal || !img) return;
 
-  img.src = imageSrc;
+  const token = ++lightboxToken;
+  const smallSrc = String(imageSrc).replace(/(^|\/)images\/(?!small\/)/, "$1images/small/");
+  let fullReady = false;
+  img.removeAttribute("src");
+  img.style.visibility = "hidden";
   img.alt = caption || "Event photo";
   if (captionEl) captionEl.textContent = caption || "";
+
+  if (smallSrc !== imageSrc) {
+    const small = new Image();
+    small.onload = () => {
+      if (token === lightboxToken && !fullReady) { img.src = smallSrc; img.style.visibility = ""; }
+    };
+    small.src = smallSrc;
+  }
+  const full = new Image();
+  full.onload = () => {
+    if (token !== lightboxToken) return;
+    fullReady = true;
+    img.src = imageSrc;
+    img.style.visibility = "";
+  };
+  full.src = imageSrc;
 
   overlay.classList.add("is-open");
   modal.classList.add("is-open");
@@ -279,7 +300,7 @@ function showBreadColours() {
     <div class="bread-colour-grid">
       ${breadProducts().map(p => `
         <button type="button" class="bread-colour" data-colour-id="${escapeHTML(p.id)}">
-          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <img src="${escapeHTML(smallPath(p.image))}" alt="${escapeHTML(p.name)}" loading="lazy">
           <span>${escapeHTML(p.name.replace("Bread Cloth: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
@@ -289,13 +310,21 @@ function showBreadColours() {
   });
 }
 
-function showBreadDetail(id) {
+async function showBreadDetail(id) {
   const body = document.getElementById("bread-body");
   const p = breadProducts().find(x => x.id === id);
   if (!body || !p) return;
 
+  await loadLiveData();
+  await refreshLiveStock();
+
   const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
-  const available = isLiveAvailable(p);
+  const stock = breadStockOf(p);
+  const max = Math.min(BREAD_MAX_QTY, stock);
+  const available = isLiveAvailable(p) && stock > 0;
+  const stockHTML = stock > 0
+    ? `<p class="bread-stock">In stock: <strong>${stock}</strong></p>`
+    : `<p class="bread-stock bread-stock-out"><strong>Sold out</strong></p>`;
   const qtyHTML = available ? `
     <div class="cart-qty bread-qty">
       <span>Quantity</span>
@@ -303,7 +332,7 @@ function showBreadDetail(id) {
       <span data-qty-value>1</span>
       <button type="button" class="qty-btn" data-qty-action="inc">+</button>
     </div>
-    <p class="bread-hint">Up to ${BREAD_MAX_QTY} for each design.</p>` : "";
+    <p class="bread-hint">Up to ${max} for each design.</p>` : "";
 
   body.innerHTML = `
     <button type="button" class="bread-back" id="bread-back">← All colours</button>
@@ -312,26 +341,27 @@ function showBreadDetail(id) {
       ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
+    ${stockHTML}
     ${tileStatusHTML(p)}
     ${detailBlocksHTML(p)}
     <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${qtyHTML}${buyActionsHTML(p.id, available, "Add to bag")}</div>`;
 
   document.getElementById("bread-back").addEventListener("click", showBreadColours);
-  setupBreadQuantity(body);
+  setupBreadQuantity(body, max);
   attachAddToBagHandlers();
   applyLiveProductStatuses();
 }
 
-/* Quantity box for bread cloths: 1 to BREAD_MAX_QTY */
-function setupBreadQuantity(body) {
+/* Quantity box for bread cloths: 1 up to the lower of BREAD_MAX_QTY and the stock left */
+function setupBreadQuantity(body, max = BREAD_MAX_QTY) {
   const value = body.querySelector("[data-qty-value]");
   if (!value) return;
   const incBtn = body.querySelector('[data-qty-action="inc"]');
   const decBtn = body.querySelector('[data-qty-action="dec"]');
   const update = (next) => {
-    const n = Math.min(Math.max(next, 1), BREAD_MAX_QTY);
+    const n = Math.min(Math.max(next, 1), max);
     value.textContent = n;
-    incBtn.disabled = n >= BREAD_MAX_QTY;
+    incBtn.disabled = n >= max;
     decBtn.disabled = n <= 1;
   };
   incBtn.addEventListener("click", () => update(Number(value.textContent) + 1));
@@ -394,7 +424,31 @@ const LOCAL_SOLD_KEY = "patchAndPosyLocallySold";
 let liveStatusById = {};
 let livePriceById = {};
 let liveDetailsById = {};   // productDetails/{id} -> { description, dimensions, care }
+let liveStockById = {};     // productStock/{id} -> { stock: 4 } (bread cloths only)
 let liveLoadPromise = null;
+
+/* Pieces left for a bread cloth design. Not set yet in the dashboard = 0 (not sold until stock is entered). */
+function breadStockOf(p) {
+  const n = liveStockById[p.id];
+  return Number.isInteger(n) ? n : 0;
+}
+
+/* Re-reads the stock counts, so a design shows the latest number when it is opened */
+async function refreshLiveStock() {
+  const fb = typeof initFirebase === "function" ? initFirebase() : null;
+  if (!fb || !fb.db) return;
+  try {
+    const snap = await fb.db.collection("productStock").get();
+    const fresh = {};
+    snap.docs.forEach((doc) => {
+      const n = Number(doc.data().stock);
+      if (Number.isInteger(n) && n >= 0) fresh[doc.id] = n;
+    });
+    liveStockById = fresh;
+  } catch (err) {
+    console.error("Couldn't refresh bread cloth stock:", err);
+  }
+}
 
 function loadLiveData() {
   if (!liveLoadPromise) {
@@ -429,6 +483,19 @@ function loadLiveData() {
           detailSnap.docs.forEach((doc) => { liveDetailsById[doc.id] = doc.data(); });
         } catch (err) {
           console.error("Couldn't load product details:", err);
+        }
+      }
+
+      // Bread cloth stock: kept apart so a problem here never stops statuses and prices from loading.
+      if (fb && fb.db) {
+        try {
+          const stockSnap = await fb.db.collection("productStock").get();
+          stockSnap.docs.forEach((doc) => {
+            const n = Number(doc.data().stock);
+            if (Number.isInteger(n) && n >= 0) liveStockById[doc.id] = n;
+          });
+        } catch (err) {
+          console.error("Couldn't load bread cloth stock:", err);
         }
       }
 
@@ -652,7 +719,7 @@ function showPotDesigns() {
     <div class="bread-colour-grid">
       ${potProducts().map(p => `
         <button type="button" class="bread-colour" data-pot-id="${escapeHTML(p.id)}">
-          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <img src="${escapeHTML(smallPath(p.image))}" alt="${escapeHTML(p.name)}" loading="lazy">
           <span>${escapeHTML(p.name.replace("Pot Holder: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
@@ -796,7 +863,19 @@ function initTeaModal() {
    Lets a folder's photos work whether the files are .JPG, .jpg, .jpeg or .png. */
 const IMG_EXT_FALLBACKS = [".JPG", ".jpg", ".jpeg", ".JPEG", ".png", ".PNG", ".webp", ".WEBP", ".gif"];
 
+/* Web-size photos live in images/small/ (same folders and file names as images/).
+   Cards, grids and banners load those; the zoom (lightbox) still opens the full-size original. */
+const SMALL_PHOTO_FOLDER = "images/small/";
+function smallPath(src) {
+  const s = String(src || "");
+  return s.startsWith("images/") ? SMALL_PHOTO_FOLDER + s.slice("images/".length) : s;
+}
+function fullSizePath(src) {
+  return String(src || "").replace(/(^|\/)images\/small\//, "$1images/");
+}
+
 function imgTag(src, alt, mode) {
+  src = smallPath(src);
   // Always start with IMG_EXT_FALLBACKS[0] (".JPG") and strip any extension written in the data,
   // so uppercase .JPG files load and the retry list is tried in order from the start.
   const m = String(src).match(/\.[^./]+$/);
@@ -922,7 +1001,7 @@ function initTableclothModal() {
   // Photos open full size in the lightbox when clicked.
   document.addEventListener("click", (e) => {
     const img = e.target.closest(".tc-zoom img");
-    if (img) openLightbox(img.currentSrc || img.src, img.alt);
+    if (img) openLightbox(fullSizePath(img.currentSrc || img.src), img.alt);
   });
   document.getElementById("tablecloth-close")?.addEventListener("click", closeTableclothModal);
   document.getElementById("tablecloth-overlay")?.addEventListener("click", closeTableclothModal);
@@ -1156,7 +1235,7 @@ const HERO_SLIDES = [
 /* Thumbnails load by their exact file name (no .JPG-first guessing), so the first slide shows at once */
 function thumbImg(src, alt, eager) {
   const loading = eager ? "eager" : "lazy";
-  return `<img src="${escapeHTML(src)}" alt="${escapeHTML(alt || "")}" loading="${loading}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;display:block">`;
+  return `<img src="${escapeHTML(smallPath(src))}" alt="${escapeHTML(alt || "")}" loading="${loading}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;display:block">`;
 }
 
 function renderHeroSlideshow() {
@@ -1216,7 +1295,7 @@ function renderHeroSlideshow() {
   });
 
   // Load the other slides one at a time after the page has loaded, so the first slide is not held back
-  const queue = slides.slice(1).map(s => s.src);
+  const queue = slides.slice(1).map(s => smallPath(s.src));
   function loadNext() {
     const src = queue.shift();
     if (!src) return;

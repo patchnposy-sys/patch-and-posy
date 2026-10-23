@@ -79,6 +79,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Bread cloth stock: public read. Customers may only LOWER the stock of a design
+    // (when they order it, in the same step that saves the order). Only the admin may set or raise it.
+    match /productStock/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow update: if request.resource.data.keys().hasOnly(['stock', 'updatedAt'])
+        && request.resource.data.stock is int
+        && request.resource.data.stock >= 0
+        && request.resource.data.stock < resource.data.stock;
+    }
+
     // Everything else is closed
   }
 }

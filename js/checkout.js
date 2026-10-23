@@ -143,6 +143,14 @@ async function submitOrder(event) {
   try {
     await saveOrderToFirestore(order);
   } catch (err) {
+    // Not enough stock left for something in the bag: nothing was saved, so ask the customer to change the bag.
+    if (err && err.code === "OUT_OF_STOCK") {
+      submitBtn.disabled = false;
+      showCheckoutStatus(err.message, "error");
+      if (typeof refreshLiveStock === "function") await refreshLiveStock();
+      if (typeof renderCartDrawer === "function") renderCartDrawer();
+      return;
+    }
     console.error("Could not save order to Firestore:", err);
     // Order still proceeds — it's queued locally so nothing is lost,
     // and emails are still attempted below.
@@ -151,10 +159,11 @@ async function submitOrder(event) {
 
   const emailResults = await sendOrderEmails(order);
 
-  // Each design is a one-of-a-kind, single-unit piece — once it's
+  // Each tablecloth and accessory is a one-of-a-kind piece — once it's
   // ordered (from the website, same as via WhatsApp), it's sold out.
+  // Bread cloths are counted by stock instead, so they are not marked sold out.
   if (typeof markProductSold === "function") {
-    order.items.forEach((item) => markProductSold(item.id));
+    order.items.filter((item) => !isStockTracked(item)).forEach((item) => markProductSold(item.id));
   }
 
   submitBtn.disabled = false;
@@ -163,11 +172,36 @@ async function submitOrder(event) {
   form.reset();
 }
 
-/* Firestore save (requires js/firebase-config.js to be filled in) */
+/* Firestore save (requires js/firebase-config.js to be filled in).
+   Bread cloth stock is checked and reduced in the same transaction that saves the order,
+   so two customers can never both buy the last piece. */
 async function saveOrderToFirestore(order) {
   const fb = initFirebase();
   if (!fb || !fb.db) throw new Error("Firebase not configured");
-  await fb.db.collection("orders").doc(order.orderId).set(order);
+
+  const orderRef = fb.db.collection("orders").doc(order.orderId);
+  const tracked = order.items.filter((item) => isStockTracked(item));
+
+  await fb.db.runTransaction(async (tx) => {
+    const stockRefs = tracked.map((item) => fb.db.collection("productStock").doc(item.id));
+    const snaps = await Promise.all(stockRefs.map((ref) => tx.get(ref)));
+    const left = snaps.map((snap) => (snap.exists ? Number(snap.data().stock) : 0));
+
+    tracked.forEach((item, i) => {
+      if (!(Number.isInteger(left[i]) && left[i] >= item.qty)) {
+        const err = new Error(left[i] > 0
+          ? `Sorry, only ${left[i]} left of ${item.name}. Please reduce the quantity in your bag.`
+          : `Sorry, ${item.name} is sold out. Please remove it from your bag.`);
+        err.code = "OUT_OF_STOCK";
+        throw err;
+      }
+    });
+
+    tracked.forEach((item, i) => {
+      tx.update(stockRefs[i], { stock: left[i] - item.qty, updatedAt: order.createdAt });
+    });
+    tx.set(orderRef, order);
+  });
 }
 
 /* Fallback so an order is never silently lost if Firebase isn't set up
@@ -200,7 +234,7 @@ function showOrderConfirmation(order, emailResults) {
 
   body.innerHTML = `
     <p class="confirm-order-id">Order ${escapeHTML(order.orderId)}</p>
-    <p>Thank you, ${escapeHTML(order.customer.name)}! Your order has been received.</p>
+    <p>Thank you, ${escapeHTML(order.customer.name)}! Your order has been placed.</p>
     <p>${emailNote}</p>
     <p>Our team will contact you by call or WhatsApp to confirm your order and share the payment details.</p>
   `;

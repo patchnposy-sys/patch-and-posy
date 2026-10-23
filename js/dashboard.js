@@ -22,8 +22,10 @@ let liveProductDetails = {};    // productId -> { description, dimensions, care 
 let pendingOrderStatus = {};    // orderId -> status
 let pendingProductStatus = {};  // productId -> "AVAILABLE" | "SOLD"
 let pendingPrices = {};         // productId -> number
-let invalidPriceIds = new Set();
+let invalidPriceIds = new Set(); // red boxes: price ids, and "stock:<id>" for stock boxes
 let pendingDetails = {};        // productId -> { description?, dimensions?, care? }
+let pendingStock = {};          // bread cloth productId -> whole number of pieces
+let liveProductStock = {};      // productStock/{id} -> saved number of pieces
 
 document.addEventListener("DOMContentLoaded", () => {
   const fb = initFirebase();
@@ -488,12 +490,18 @@ async function loadProductStatuses() {
   const fb = initFirebase();
   if (fb && fb.db) {
     try {
-      const [statusSnap, priceSnap] = await Promise.all([
+      const [statusSnap, priceSnap, stockSnap] = await Promise.all([
         fb.db.collection("productStatus").get(),
-        fb.db.collection("productPrices").get()
+        fb.db.collection("productPrices").get(),
+        fb.db.collection("productStock").get()
       ]);
       liveProductStatuses = {};
       liveProductPrices = {};
+      liveProductStock = {};
+      stockSnap.docs.forEach((doc) => {
+        const n = Number(doc.data().stock);
+        if (Number.isInteger(n) && n >= 0) liveProductStock[doc.id] = n;
+      });
       statusSnap.docs.forEach((doc) => {
         const status = doc.data().status;
         if (status) liveProductStatuses[doc.id] = String(status).toUpperCase();
@@ -506,7 +514,7 @@ async function loadProductStatuses() {
       console.error("Failed to load product data:", err);
       const message = `<tr><td colspan="5" class="dash-empty">Couldn't load live data. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
       document.getElementById("products-table-body").innerHTML = message;
-      document.getElementById("prices-table-body").innerHTML = message.replace('colspan="5"', 'colspan="4"');
+      document.getElementById("prices-table-body").innerHTML = message;
       return;
     }
   }
@@ -575,7 +583,7 @@ function renderPricesTable() {
   invalidPriceIds.clear();
 
   if (getCatalogProducts().length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
     return;
   }
 
@@ -583,7 +591,7 @@ function renderPricesTable() {
   groupedProducts().forEach((items, name) => {
     html += `
       <tr class="dash-group-row">
-        <th colspan="4">${escapeHTML(name)}</th>
+        <th colspan="5">${escapeHTML(name)}</th>
       </tr>`;
     html += items.map(priceRowHTML).join("");
   });
@@ -591,6 +599,9 @@ function renderPricesTable() {
 
   tbody.querySelectorAll(".dash-price-input").forEach((input) => {
     input.addEventListener("input", () => setPendingPrice(input));
+  });
+  tbody.querySelectorAll(".dash-stock-input").forEach((input) => {
+    input.addEventListener("input", () => setPendingStock(input));
   });
 }
 
@@ -606,7 +617,43 @@ function priceRowHTML(p) {
           data-price-id="${escapeHTML(p.id)}" value="${pending !== undefined ? pending : ""}"
           placeholder="Leave blank to keep">
       </td>
+      <td>${p.category === "Bread Cloths" ? stockCellHTML(p) : "—"}</td>
     </tr>`;
+}
+
+/* Stock cell for bread cloths: what is saved now, and a box for a new number */
+function stockCellHTML(p) {
+  const saved = liveProductStock[p.id];
+  const pending = pendingStock[p.id];
+  return `
+    <div>Now: <strong>${saved !== undefined ? saved : "not set"}</strong></div>
+    <input type="number" min="0" step="1" inputmode="numeric" class="dash-stock-input"
+      data-stock-id="${escapeHTML(p.id)}" value="${pending !== undefined ? pending : ""}"
+      placeholder="Leave blank to keep">`;
+}
+
+/* Reads a Stock box. Blank = no change. Must be a whole number, 0 or more. */
+function setPendingStock(input) {
+  const id = input.dataset.stockId;
+  const raw = input.value.trim();
+  const redKey = "stock:" + id;
+
+  delete pendingStock[id];
+  invalidPriceIds.delete(redKey);
+  input.classList.remove("is-invalid");
+
+  if (raw !== "") {
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 0) {
+      invalidPriceIds.add(redKey);
+      input.classList.add("is-invalid");
+    } else if (n !== liveProductStock[id]) {
+      pendingStock[id] = n;
+    }
+  }
+
+  input.closest("tr").classList.toggle("dash-row-changed", pendingStock[id] !== undefined || pendingPrices[id] !== undefined);
+  updateSaveBar();
 }
 
 /* Reads a New Price box. Blank = no change. Must be a whole number above 0. */
@@ -671,11 +718,15 @@ function collectChanges() {
     })
     .filter(Boolean);
 
-  return { orders, products, prices, details, invalid: invalidPriceIds.size };
+  const stock = Object.entries(pendingStock)
+    .map(([id, n]) => ({ id, stock: n, product: findProduct(id) }))
+    .filter(c => c.product && liveProductStock[c.id] !== c.stock);
+
+  return { orders, products, prices, details, stock, invalid: invalidPriceIds.size };
 }
 
 function changeCount(changes) {
-  return changes.orders.length + changes.products.length + changes.prices.length + changes.details.length;
+  return changes.orders.length + changes.products.length + changes.prices.length + changes.details.length + changes.stock.length;
 }
 
 function hasUnsavedChanges() {
@@ -690,7 +741,7 @@ function updateSaveBar() {
   const countEl = document.getElementById("dash-savebar-count");
 
   if (invalidPriceIds.size > 0) {
-    countEl.innerHTML = `<strong>Fix the red New Price boxes</strong> (whole numbers above 0)`;
+    countEl.innerHTML = `<strong>Fix the red boxes</strong> (New Price: whole numbers above 0; Stock: whole numbers, 0 or more)`;
   } else {
     countEl.innerHTML = count === 0
       ? "No unsaved changes"
@@ -717,6 +768,7 @@ function cancelChanges() {
   pendingProductStatus = {};
   pendingPrices = {};
   pendingDetails = {};
+  pendingStock = {};
   invalidPriceIds.clear();
 
   renderOrdersTable();
@@ -731,7 +783,7 @@ async function saveChanges() {
   const total = changeCount(changes);
 
   if (changes.invalid > 0) {
-    alert("Fix the red New Price boxes first. Prices must be whole numbers above 0.");
+    alert("Fix the red boxes first. Prices must be whole numbers above 0. Stock must be whole numbers, 0 or more.");
     return;
   }
   if (total === 0) return;
@@ -741,6 +793,7 @@ async function saveChanges() {
   if (changes.products.length) parts.push(`${changes.products.length} product status change${changes.products.length === 1 ? "" : "s"}`);
   if (changes.prices.length) parts.push(`${changes.prices.length} price change${changes.prices.length === 1 ? "" : "s"}`);
   if (changes.details.length) parts.push(`${changes.details.length} details change${changes.details.length === 1 ? "" : "s"}`);
+  if (changes.stock.length) parts.push(`${changes.stock.length} stock change${changes.stock.length === 1 ? "" : "s"}`);
 
   const willEmail = changes.orders.some((c) => typeof ORDER_STATUS_EMAILS !== "undefined" && ORDER_STATUS_EMAILS[c.status]);
   const emailNote = willEmail ? "\n\nClients will be emailed about confirmed, shipped, completed or cancelled orders." : "";
@@ -774,6 +827,9 @@ async function saveChanges() {
         updatedAt: now
       }, { merge: true });
     });
+    changes.stock.forEach((c) => {
+      batch.set(fb.db.collection("productStock").doc(c.id), { stock: c.stock, updatedAt: now }, { merge: true });
+    });
 
     await batch.commit();
   } catch (err) {
@@ -789,6 +845,7 @@ async function saveChanges() {
   pendingProductStatus = {};
   pendingPrices = {};
   pendingDetails = {};
+  pendingStock = {};
   invalidPriceIds.clear();
 
   // Email clients whose order status changed (confirmed, shipped, completed, cancelled).

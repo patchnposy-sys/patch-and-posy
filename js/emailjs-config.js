@@ -162,11 +162,12 @@ async function buildOrderParams(order) {
     subtotal: formatPKR(order.subtotal),
     delivery_charge: formatPKR(order.deliveryCharge),
     total: formatPKR(order.total),
-    payment_method: "Bank / Account Transfer",
-    bank_name: STORE_CONFIG.bankDetails.bankName,
-    account_title: STORE_CONFIG.bankDetails.accountTitle,
-    account_number: STORE_CONFIG.bankDetails.accountNumber,
-    iban: STORE_CONFIG.bankDetails.iban
+    payment_method: "Shared on WhatsApp",
+    whatsapp_note: "Our team will contact you on WhatsApp to share the payment details and shipment details.",
+    bank_name: "",
+    account_title: "",
+    account_number: "",
+    iban: ""
   };
 }
 

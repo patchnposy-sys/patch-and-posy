@@ -7,6 +7,25 @@ Version numbers follow MAJOR.MINOR.PATCH.
 
 The current version is in the `VERSION` file and in the storefront footer.
 
+## 2.2.0: Stock, checkout dialogs and popup fixes (2026-10-23)
+
+### Added
+- Stock count for bread cloths and tea cozies, set per design in the dashboard Prices tab. Stock goes down automatically when an order is placed, and a design at 0 shows Sold out.
+- Quantity controls for bread cloths (up to 4 per order) and tea cozies (up to 3 per order), limited by the stock left.
+- "Placing your order" dialog while an order is saved.
+- Version number shown in the dashboard.
+
+### Changed
+- Bread cloth and tea cozy popups use the same layout for every design. Quantity and Add to bag stay in the same place, and a sold-out design shows SOLD.
+- Bread cloth and tea cozy tiles show SOLD when no stock is left.
+- Checkout and order confirmation dialogs: close button in the top-right corner.
+- Order emails: no bank transfer details; the customer and the admin get different wording. Photo links use the live website.
+- Removed extra hint text from the product popups.
+
+### Fixed
+- SOLD badge being overwritten by AVAILABLE on bread cloth and tea cozy popups.
+- Photos in bread cloth and tea cozy popups scrolling sideways.
+
 ## 2.1.0: Security, checkout and dashboard (2026-10-21)
 
 ### Added

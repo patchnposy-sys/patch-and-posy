@@ -577,8 +577,7 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
   .event-gallery{ grid-template-columns: repeat(2, 1fr); }
 }
 /* ---------- Bread cloths popup ---------- */
-.bread-modal{ width: min(760px, 94vw); max-height: 88vh; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
-.bread-modal::-webkit-scrollbar{ display: none; }
+.bread-modal{ width: min(760px, 94vw); max-height: 88vh; overflow-y: auto; }
 .bread-inner{ padding: 26px 22px; }
 .bread-inner .drawer-close{ position:absolute; top:10px; right:14px; }
 .bread-title{ font-size:1.35rem; margin: 0 0 6px; padding-right: 30px; }
@@ -595,18 +594,30 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
   background:none; border:none; cursor:pointer; font:inherit; color:inherit;
   padding:0; margin-bottom:12px; text-decoration:underline;
 }
-/* All photos show at once, two per row, so nothing scrolls sideways */
 .bread-photos{
-  display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px;
-  margin-bottom:14px; min-width:0;
+  display:flex; gap:12px; overflow-x:auto; scroll-snap-type: x mandatory;
+  padding-bottom:6px; margin-bottom:14px;
 }
 .bread-photos img{
-  width:100%; min-width:0; height:auto; border-radius:8px;
+  flex: 0 0 85%; width:85%; aspect-ratio: 3 / 4; object-fit:cover;
+  border-radius:8px; scroll-snap-align: center;
 }
-.bread-buy{ min-width:0; }
+@media (min-width: 700px){
+  .bread-photos img{ flex: 0 0 calc(50% - 6px); width: calc(50% - 6px); }
+}
 .bread-buy .patch-actions{ margin-top:6px; }
-.qty-btn:disabled{ opacity:.35; cursor:default; }
-.bread-inner, .tc-detail, .tc-section p{ min-width:0; overflow-wrap:anywhere; }
+
+/* Bread cloth and tea cozy popups only: photos in two columns, nothing scrolls sideways */
+#bread-body .bread-photos, #tea-body .bread-photos{
+  display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; overflow:visible; scroll-snap-type:none;
+}
+#bread-body .bread-photos img, #tea-body .bread-photos img{ flex:none; width:100%; min-width:0; scroll-snap-align:none; }
+#bread-body .qty-btn:disabled, #tea-body .qty-btn:disabled{ opacity:.35; cursor:default; }
+/* Phone width only: hide the popup's scrollbar (it still scrolls by touch) */
+@media (max-width: 699px){
+  #bread-modal, #tea-modal{ scrollbar-width: none; }
+  #bread-modal::-webkit-scrollbar, #tea-modal::-webkit-scrollbar{ display: none; }
+}
 .bread-description{ margin-bottom:14px; line-height:1.6; }
 
 
@@ -738,6 +749,19 @@ footer{ background: var(--blush); color: var(--brown); padding: 60px 32px 28px; 
 /* Checkout and order confirmation sit above the product popups; the basket drawer stays on top (130/131) */
 #checkout-overlay, #confirm-overlay{ z-index: 120; }
 #checkout-modal, #confirm-modal{ z-index: 121; }
+/* Close button sits in the top-right corner of the checkout and confirmation dialogs */
+#checkout-modal .drawer-close, #confirm-modal .drawer-close{ position:absolute; top:10px; right:14px; }
+/* "Placing your order" dialog, above checkout */
+#placing-overlay{ z-index: 122; }
+#placing-modal{ z-index: 123; width: min(320px, 88vw); text-align: center; }
+.placing-inner{ padding: 34px 26px; }
+.placing-inner p{ margin: 0; font-weight: 600; }
+.placing-spinner{
+  width: 38px; height: 38px; margin: 0 auto 14px; border-radius: 50%;
+  border: 3px solid var(--line); border-top-color: var(--raspberry-deep);
+  animation: placing-spin 0.9s linear infinite;
+}
+@keyframes placing-spin{ to { transform: rotate(360deg); } }
 .lightbox-inner img{
   width: 100% !important; max-width: 100%; max-height: 85vh;
   height: auto; margin: 0 auto; display: block; object-fit: contain;

@@ -138,7 +138,8 @@ async function submitOrder(event) {
   };
 
   submitBtn.disabled = true;
-  showCheckoutStatus("Placing your order…", "info");
+  showCheckoutStatus("", "info");
+  setPlacingDialog(true);
 
   try {
     await saveOrderToFirestore(order);
@@ -146,6 +147,7 @@ async function submitOrder(event) {
     // Not enough stock left for something in the bag: nothing was saved, so ask the customer to change the bag.
     if (err && err.code === "OUT_OF_STOCK") {
       submitBtn.disabled = false;
+      setPlacingDialog(false);
       showCheckoutStatus(err.message, "error");
       if (typeof refreshLiveStock === "function") await refreshLiveStock();
       if (typeof renderCartDrawer === "function") renderCartDrawer();
@@ -221,7 +223,17 @@ function showCheckoutStatus(message, state) {
   statusEl.dataset.state = state;
 }
 
+/* Shows or hides the "Placing your order" dialog */
+function setPlacingDialog(show) {
+  const overlay = document.getElementById("placing-overlay");
+  const modal = document.getElementById("placing-modal");
+  if (!overlay || !modal) return;
+  overlay.classList.toggle("is-open", show);
+  modal.classList.toggle("is-open", show);
+}
+
 function showOrderConfirmation(order, emailResults) {
+  setPlacingDialog(false);
   closeCheckoutModal();
   const overlay = document.getElementById("confirm-overlay");
   const modal = document.getElementById("confirm-modal");

@@ -13,6 +13,9 @@
 
 let allOrders = [];
 
+/* Shown before an order is deleted or cancelled: the item must be reopened first */
+const RESTOCK_REMINDER = "Before you continue: have you already set the item back to AVAILABLE in the Products tab, or increased its stock in the Prices tab, and pressed Save changes?\n\nPress OK only if you have.";
+
 /* Saved values from Firestore */
 let liveProductStatuses = {};   // productId -> "AVAILABLE" | "SOLD"
 let liveProductPrices = {};     // productId -> number (rupees)
@@ -167,16 +170,59 @@ function renderOrdersTable() {
           ).join("")}
         </select>
       </td>
-      <td><button type="button" class="dash-view-btn" data-order-id="${escapeHTML(order.orderId)}">View</button></td>
+      <td><button type="button" class="dash-view-btn" data-order-id="${escapeHTML(order.orderId)}">View</button><button type="button" class="dash-view-btn dash-delete-btn" data-delete-order="${escapeHTML(order.orderId)}">Delete</button></td>
     </tr>`;
   }).join("");
 
   tbody.querySelectorAll(".dash-status-select").forEach((select) => {
     select.addEventListener("change", () => setPendingOrderStatus(select.dataset.orderId, select.value));
   });
-  tbody.querySelectorAll(".dash-view-btn").forEach((btn) => {
+  tbody.querySelectorAll(".dash-view-btn[data-order-id]").forEach((btn) => {
     btn.addEventListener("click", () => openOrderDetail(btn.dataset.orderId));
   });
+  tbody.querySelectorAll("[data-delete-order]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteOrder(btn.dataset.deleteOrder));
+  });
+}
+
+/* Deletes orders from Firestore, then removes them from the page */
+async function deleteOrders(orderIds) {
+  const fb = initFirebase();
+  if (!fb || !fb.db) {
+    alert("Firebase is not connected, so nothing was deleted.");
+    return;
+  }
+  try {
+    for (let i = 0; i < orderIds.length; i += 400) {
+      const batch = fb.db.batch();
+      orderIds.slice(i, i + 400).forEach((id) => batch.delete(fb.db.collection("orders").doc(id)));
+      await batch.commit();
+    }
+  } catch (err) {
+    console.error("Delete failed:", err);
+    alert("Couldn't delete. Check your connection and try again.");
+    return;
+  }
+  const gone = new Set(orderIds);
+  allOrders = allOrders.filter((o) => !gone.has(o.orderId));
+  orderIds.forEach((id) => { delete pendingOrderStatus[id]; });
+  renderOrdersTable();
+  renderClients();
+  updateSaveBar();
+}
+
+async function deleteOrder(orderId) {
+  const order = allOrders.find((o) => o.orderId === orderId);
+  if (!order) return;
+  if (!confirm(`Delete order ${orderId} (${order.customer?.name || "no name"})? This cannot be undone.\n\n${RESTOCK_REMINDER}`)) return;
+  await deleteOrders([orderId]);
+}
+
+async function deleteClient(email) {
+  const ids = allOrders.filter((o) => o.customer?.email === email).map((o) => o.orderId);
+  if (ids.length === 0) return;
+  if (!confirm(`Delete ${email} and all ${ids.length} of their order${ids.length === 1 ? "" : "s"}? This cannot be undone.\n\n${RESTOCK_REMINDER}`)) return;
+  await deleteOrders(ids);
 }
 
 function setPendingOrderStatus(orderId, status) {
@@ -263,7 +309,7 @@ function renderClients() {
   const clients = Object.values(byEmail).sort((a, b) => b.totalSpent - a.totalSpent);
 
   if (clients.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="dash-empty">No clients yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="dash-empty">No clients yet.</td></tr>`;
     return;
   }
 
@@ -275,8 +321,13 @@ function renderClients() {
       <td>${escapeHTML(c.city)}</td>
       <td>${c.orderCount}</td>
       <td>${formatPKR(c.totalSpent)}</td>
+      <td><button type="button" class="dash-view-btn dash-delete-btn" data-delete-client="${escapeHTML(c.email)}">Delete</button></td>
     </tr>
   `).join("");
+
+  tbody.querySelectorAll("[data-delete-client]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteClient(btn.dataset.deleteClient));
+  });
 }
 
 /* ---------- Local (unsynced) orders fallback ---------- */
@@ -794,6 +845,9 @@ async function saveChanges() {
   if (changes.prices.length) parts.push(`${changes.prices.length} price change${changes.prices.length === 1 ? "" : "s"}`);
   if (changes.details.length) parts.push(`${changes.details.length} details change${changes.details.length === 1 ? "" : "s"}`);
   if (changes.stock.length) parts.push(`${changes.stock.length} stock change${changes.stock.length === 1 ? "" : "s"}`);
+
+  const cancelling = changes.orders.filter((c) => c.status === "cancelled").length;
+  if (cancelling > 0 && !window.confirm(`You are cancelling ${cancelling} order${cancelling === 1 ? "" : "s"}.\n\n${RESTOCK_REMINDER}`)) return;
 
   const willEmail = changes.orders.some((c) => typeof ORDER_STATUS_EMAILS !== "undefined" && ORDER_STATUS_EMAILS[c.status]);
   const emailNote = willEmail ? "\n\nClients will be emailed about confirmed, shipped, completed or cancelled orders." : "";

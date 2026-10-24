@@ -16,7 +16,7 @@
 <!-- ============ LOGIN SCREEN ============ -->
 <div class="dash-login-screen" id="dash-login-screen">
   <div class="dash-login-box">
-    <div class="dash-login-mark"><img src="images/logo.jpg" alt="Patch &amp; Posy" class="dash-logo"></div>
+    <div class="dash-login-mark">Patch &amp; Posy</div>
     <h1>Dashboard login</h1>
     <p class="dash-login-sub">Sign in with the admin account you created in Firebase Authentication.</p>
     <form id="dash-login-form">
@@ -34,7 +34,7 @@
 <div class="dash-app" id="dash-app" hidden>
   <header class="dash-header">
     <div class="dash-header-inner">
-      <div class="dash-brand"><img src="images/logo.jpg" alt="Patch &amp; Posy" class="dash-logo"></div>
+      <div class="dash-brand">Patch &amp; Posy — Dashboard <span class="dash-version">Version 2.2.0</span></div>
       <div class="dash-header-right">
         <span id="dash-user-email" class="dash-user-email"></span>
         <button type="button" class="btn-secondary" id="dash-logout-btn">Log out</button>
@@ -43,6 +43,7 @@
     <nav class="dash-tabs">
       <button type="button" class="dash-tab is-active" data-tab="orders">Orders</button>
       <button type="button" class="dash-tab" data-tab="clients">Clients</button>
+      <button type="button" class="dash-tab" data-tab="subscribers">Subscribers</button>
       <button type="button" class="dash-tab" data-tab="products">Products</button>
       <button type="button" class="dash-tab" data-tab="prices">Prices</button>
       <button type="button" class="dash-tab" data-tab="details">Details</button>
@@ -104,10 +105,34 @@
               <th>City</th>
               <th>Orders</th>
               <th>Total spent</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="clients-table-body">
-            <tr><td colspan="6" class="dash-empty">Loading clients…</td></tr>
+            <tr><td colspan="7" class="dash-empty">Loading clients…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SUBSCRIBERS TAB -->
+    <section class="dash-panel" id="panel-subscribers">
+      <div class="dash-panel-head">
+        <h2>Subscribers</h2>
+        <p class="dash-panel-sub">Email addresses sent in through the newsletter form on the website, newest first. Add them to your mailing list by hand.</p>
+        <button type="button" class="btn-secondary" id="subscribers-copy-btn">Copy all emails</button>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Date requested</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="subscribers-table-body">
+            <tr><td colspan="3" class="dash-empty">Loading subscribers…</td></tr>
           </tbody>
         </table>
       </div>
@@ -141,7 +166,7 @@
     <section class="dash-panel" id="panel-prices">
       <div class="dash-panel-head">
         <h2>Prices</h2>
-        <p class="dash-panel-sub">Live Price is what the website shows and charges now. Type a New Price in whole rupees, then press Save changes at the bottom of the page. Leave New Price blank to keep the current price.</p>
+        <p class="dash-panel-sub">Live Price is what the website shows and charges now. Type a New Price in whole rupees, then press Save changes at the bottom of the page. Leave New Price blank to keep the current price. For bread cloths and tea cozies, Stock is the number of pieces you have for each design. The website reduces it automatically when an order is placed, and stops selling a design at 0. Type a new number here to restock.</p>
       </div>
       <div class="dash-table-wrap">
         <table class="dash-table">
@@ -151,10 +176,11 @@
               <th>Name</th>
               <th>Live Price</th>
               <th>New Price</th>
+              <th>Stock (bread cloths and tea cozies)</th>
             </tr>
           </thead>
           <tbody id="prices-table-body">
-            <tr><td colspan="4" class="dash-empty">Loading prices…</td></tr>
+            <tr><td colspan="5" class="dash-empty">Loading prices…</td></tr>
           </tbody>
         </table>
       </div>

@@ -26,8 +26,8 @@
 const EMAILJS_CONFIG = {
   publicKey: "Lv8oFlb_LkY2ZJdUU",
   serviceId: "service_80onzwl",
-  customerTemplateId: "template_bqn9b18",
-  adminTemplateId: "template_agzmk8e",
+  customerTemplateId: "template_agzmk8e",
+  adminTemplateId: "template_bqn9b18",
   statusTemplateId: "PASTE_YOUR_STATUS_TEMPLATE_ID"
 };
 
@@ -93,7 +93,8 @@ function resolveEmailImageUrl(src) {
     const m = String(src).match(/\.[^./]+$/);
     const base = m ? src.slice(0, -m[0].length) : src;
     const candidates = [...EMAIL_IMAGE_EXTENSIONS.map((ext) => base + ext), src];
-    const origin = window.location.origin + "/";
+    // Always the live website, so email apps can load the photos (the dev preview is protected)
+    const origin = "https://patchandposy.com.pk/";
     let i = 0;
 
     const tryNext = () => {
@@ -162,11 +163,12 @@ async function buildOrderParams(order) {
     subtotal: formatPKR(order.subtotal),
     delivery_charge: formatPKR(order.deliveryCharge),
     total: formatPKR(order.total),
-    payment_method: "Bank / Account Transfer",
-    bank_name: STORE_CONFIG.bankDetails.bankName,
-    account_title: STORE_CONFIG.bankDetails.accountTitle,
-    account_number: STORE_CONFIG.bankDetails.accountNumber,
-    iban: STORE_CONFIG.bankDetails.iban
+    payment_method: "Shared on WhatsApp",
+    whatsapp_note: "Our team will contact you on WhatsApp to share the payment details and shipment details.",
+    bank_name: "",
+    account_title: "",
+    account_number: "",
+    iban: ""
   };
 }
 

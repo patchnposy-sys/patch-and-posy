@@ -80,6 +80,8 @@
   padding: 6px 12px; border-radius: 999px; font-size:0.78rem; font-weight:600;
 }
 .dash-view-btn:hover, .dash-sync-btn:hover{ background: var(--brown); color: var(--paper); }
+.dash-delete-btn{ border-color: var(--raspberry-deep); color: var(--raspberry-deep); margin-left: 6px; }
+.dash-delete-btn:hover{ background: var(--raspberry-deep); color: var(--paper); }
 
 @media (max-width: 700px){
   .dash-header-inner, .dash-tabs, .dash-main{ padding-left:16px; padding-right:16px; }

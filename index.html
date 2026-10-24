@@ -98,7 +98,7 @@
 <section class="section story" id="story">
   <div class="wrap">
     <div class="story-visual">
-      <img src="images/story-sewing-machine.jpg" alt="My mother's sewing machine" class="story-photo">
+      <img src="images/small/story-sewing-machine.jpg" alt="My mother's sewing machine" class="story-photo">
       <span class="quote-mark">"</span>
     </div>
     <div class="story-body">
@@ -196,7 +196,7 @@
   <div class="wrap footer-bottom">
     <span>© 2026 Patch &amp; Posy. All rights reserved.</span>
     <span>Karachi, Pakistan</span>
-    <span>Version 2.1.0</span>
+    <span>Version 2.2.0</span>
   </div>
 </footer>
 
@@ -257,8 +257,17 @@
 <div class="modal confirm-modal" id="confirm-modal" role="dialog" aria-label="Order confirmed">
   <div class="modal-inner">
     <button type="button" class="drawer-close" id="confirm-modal-close" aria-label="Close">✕</button>
-    <h3>Order received 🎉</h3>
+    <h3>Order placed 🎉</h3>
     <div id="confirm-body"></div>
+  </div>
+</div>
+
+<!-- ============ PLACING ORDER DIALOG (shown while the order is saved) ============ -->
+<div class="drawer-overlay" id="placing-overlay"></div>
+<div class="modal placing-modal" id="placing-modal" role="status" aria-live="polite" aria-label="Placing your order">
+  <div class="modal-inner placing-inner">
+    <div class="placing-spinner" aria-hidden="true"></div>
+    <p>Placing your order…</p>
   </div>
 </div>
 

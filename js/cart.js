@@ -20,17 +20,30 @@ function saveCart(cart) {
   updateCartBadge();
 }
 
-/* Only bread cloths can be bought in more than one. Up to 4 of each design.
-   Every other product is always 1. */
+/* Only bread cloths and tea cozies can be bought in more than one, and their stock is counted.
+   The most that can go in one order for each design is set here. Every other product is always 1. */
 const BREAD_MAX_QTY = 4;
+const TEA_MAX_QTY = 3;
+const STOCK_TRACKED_MAX = { "Bread Cloths": BREAD_MAX_QTY, "Tea Cozies": TEA_MAX_QTY };
 
+/* Stock-counted products are limited by the stock left for each design (and never more than the per-order cap).
+   Everything else is always 1. */
 function maxQtyFor(product) {
-  return product && product.category === "Bread Cloths" ? BREAD_MAX_QTY : 1;
+  const cap = product ? STOCK_TRACKED_MAX[product.category] : undefined;
+  if (!cap) return 1;
+  return Math.min(cap, breadStockOf(product));
+}
+
+/* True for products whose stock is counted (bread cloths and tea cozies). Others are sold out after one order. */
+function isStockTracked(item) {
+  const p = typeof getAllProducts === "function" ? getAllProducts().find((x) => x.id === item.id) : null;
+  return !!p && !!STOCK_TRACKED_MAX[p.category];
 }
 
 function addToCart(product, quantity = 1) {
   const cart = getCart();
   const max = maxQtyFor(product);
+  if (max < 1) return;   // sold out
   const existing = cart.find((item) => item.id === product.id);
   if (existing) {
     existing.max = max;
@@ -117,6 +130,7 @@ function refreshCartItems() {
     if (!p) { changed = true; return; }
     const image = p.image || p.card || (p.photos && p.photos[0]) || "";
     const max = maxQtyFor(p);
+    if (max < 1) { changed = true; return; }   // sold out since it was added: take it out of the bag
     const qty = Math.min(Math.max(item.qty, 1), max);
     const updated = { ...item, name: p.name, price: p.price, image, max, qty };
     if (JSON.stringify(updated) !== JSON.stringify(item)) changed = true;
@@ -142,7 +156,7 @@ function renderCartDrawer() {
   body.innerHTML = cart.map((item) => `
     <div class="cart-line" data-id="${escapeHTML(item.id)}">
       <div class="cart-line-photo"${item.image ? "" : ` style="background:linear-gradient(135deg,#E0A83E,#C0396B);"`}>${item.image
-        ? `<img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.name)}">`
+        ? `<img src="${escapeHTML(String(item.image).replace(/^images\//, "images/small/"))}" alt="${escapeHTML(item.name)}">`
         : ""}</div>
       <div class="cart-line-info">
         <h4>${escapeHTML(item.name)}</h4>
@@ -187,14 +201,20 @@ function renderCartDrawer() {
   if (checkoutBtn) {
     checkoutBtn.addEventListener("click", () => {
       closeCartDrawer();
-      // Close any product or category dialog left open, so the checkout form is shown on its own
-      [closeLightbox, closeBreadModal, closePotModal, closeTeaModal, closeTableclothModal,
-       closeSpreadsModal, closeSpreadsList, closeKidsModal].forEach((fn) => {
-        if (typeof fn === "function") fn();
-      });
+      closeOtherDialogs();
       openCheckoutModal();
     });
   }
+}
+
+/* Close any open product, category, photo or patchwork popup, so checkout opens on a clean screen */
+function closeOtherDialogs() {
+  const keep = ["checkout-overlay", "checkout-modal", "confirm-overlay", "confirm-modal", "cart-overlay"];
+  document.querySelectorAll(".modal.is-open, .drawer-overlay.is-open").forEach((el) => {
+    if (keep.includes(el.id)) return;
+    el.classList.remove("is-open");
+  });
+  document.body.style.overflow = "";
 }
 
 function initCart() {

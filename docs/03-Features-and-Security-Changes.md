@@ -1,8 +1,8 @@
-# Patch & Posy: Features and Security Changes (Version 2.1.0)
+# Patch & Posy: Features and Security Changes (Version 2.2.0)
 
 This document lists every feature and security change made in the current version, what it does, and which files it touches. Use it as the record of what was built.
 
-Current version: **2.1.0** (see `VERSION` and `CHANGELOG.md`)
+Current version: **2.2.0** (see `VERSION` and `CHANGELOG.md`)
 
 ---
 

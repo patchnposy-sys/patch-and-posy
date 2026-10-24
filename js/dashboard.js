@@ -13,6 +13,9 @@
 
 let allOrders = [];
 
+/* Shown before an order is deleted or cancelled: the item must be reopened first */
+const RESTOCK_REMINDER = "Before you continue: have you already set the item back to AVAILABLE in the Products tab, or increased its stock in the Prices tab, and pressed Save changes?\n\nPress OK only if you have.";
+
 /* Saved values from Firestore */
 let liveProductStatuses = {};   // productId -> "AVAILABLE" | "SOLD"
 let liveProductPrices = {};     // productId -> number (rupees)
@@ -22,8 +25,10 @@ let liveProductDetails = {};    // productId -> { description, dimensions, care 
 let pendingOrderStatus = {};    // orderId -> status
 let pendingProductStatus = {};  // productId -> "AVAILABLE" | "SOLD"
 let pendingPrices = {};         // productId -> number
-let invalidPriceIds = new Set();
+let invalidPriceIds = new Set(); // red boxes: price ids, and "stock:<id>" for stock boxes
 let pendingDetails = {};        // productId -> { description?, dimensions?, care? }
+let pendingStock = {};          // bread cloth productId -> whole number of pieces
+let liveProductStock = {};      // productStock/{id} -> saved number of pieces
 
 document.addEventListener("DOMContentLoaded", () => {
   const fb = initFirebase();
@@ -48,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initOrderDetailModal();
   initSaveBar();
   renderLocalOrders();
+  initSubscriberCopy();
   if (typeof initEmailJS === "function") initEmailJS();
 });
 
@@ -111,6 +117,7 @@ function initTabs() {
       if (tab.dataset.tab === "clients") renderClients();
       if (tab.dataset.tab === "products" || tab.dataset.tab === "prices" || tab.dataset.tab === "details") loadProductStatuses();
       if (tab.dataset.tab === "local") renderLocalOrders();
+      if (tab.dataset.tab === "subscribers") loadSubscribers();
     });
   });
 }
@@ -165,16 +172,59 @@ function renderOrdersTable() {
           ).join("")}
         </select>
       </td>
-      <td><button type="button" class="dash-view-btn" data-order-id="${escapeHTML(order.orderId)}">View</button></td>
+      <td><button type="button" class="dash-view-btn" data-order-id="${escapeHTML(order.orderId)}">View</button><button type="button" class="dash-view-btn dash-delete-btn" data-delete-order="${escapeHTML(order.orderId)}">Delete</button></td>
     </tr>`;
   }).join("");
 
   tbody.querySelectorAll(".dash-status-select").forEach((select) => {
     select.addEventListener("change", () => setPendingOrderStatus(select.dataset.orderId, select.value));
   });
-  tbody.querySelectorAll(".dash-view-btn").forEach((btn) => {
+  tbody.querySelectorAll(".dash-view-btn[data-order-id]").forEach((btn) => {
     btn.addEventListener("click", () => openOrderDetail(btn.dataset.orderId));
   });
+  tbody.querySelectorAll("[data-delete-order]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteOrder(btn.dataset.deleteOrder));
+  });
+}
+
+/* Deletes orders from Firestore, then removes them from the page */
+async function deleteOrders(orderIds) {
+  const fb = initFirebase();
+  if (!fb || !fb.db) {
+    alert("Firebase is not connected, so nothing was deleted.");
+    return;
+  }
+  try {
+    for (let i = 0; i < orderIds.length; i += 400) {
+      const batch = fb.db.batch();
+      orderIds.slice(i, i + 400).forEach((id) => batch.delete(fb.db.collection("orders").doc(id)));
+      await batch.commit();
+    }
+  } catch (err) {
+    console.error("Delete failed:", err);
+    alert("Couldn't delete. Check your connection and try again.");
+    return;
+  }
+  const gone = new Set(orderIds);
+  allOrders = allOrders.filter((o) => !gone.has(o.orderId));
+  orderIds.forEach((id) => { delete pendingOrderStatus[id]; });
+  renderOrdersTable();
+  renderClients();
+  updateSaveBar();
+}
+
+async function deleteOrder(orderId) {
+  const order = allOrders.find((o) => o.orderId === orderId);
+  if (!order) return;
+  if (!confirm(`Delete order ${orderId} (${order.customer?.name || "no name"})? This cannot be undone.\n\n${RESTOCK_REMINDER}`)) return;
+  await deleteOrders([orderId]);
+}
+
+async function deleteClient(email) {
+  const ids = allOrders.filter((o) => o.customer?.email === email).map((o) => o.orderId);
+  if (ids.length === 0) return;
+  if (!confirm(`Delete ${email} and all ${ids.length} of their order${ids.length === 1 ? "" : "s"}? This cannot be undone.\n\n${RESTOCK_REMINDER}`)) return;
+  await deleteOrders(ids);
 }
 
 function setPendingOrderStatus(orderId, status) {
@@ -261,7 +311,7 @@ function renderClients() {
   const clients = Object.values(byEmail).sort((a, b) => b.totalSpent - a.totalSpent);
 
   if (clients.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="dash-empty">No clients yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="dash-empty">No clients yet.</td></tr>`;
     return;
   }
 
@@ -273,8 +323,94 @@ function renderClients() {
       <td>${escapeHTML(c.city)}</td>
       <td>${c.orderCount}</td>
       <td>${formatPKR(c.totalSpent)}</td>
+      <td><button type="button" class="dash-view-btn dash-delete-btn" data-delete-client="${escapeHTML(c.email)}">Delete</button></td>
     </tr>
   `).join("");
+
+  tbody.querySelectorAll("[data-delete-client]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteClient(btn.dataset.deleteClient));
+  });
+}
+
+/* ---------- Subscribers (newsletter emails from the website) ---------- */
+let subscriberEmails = [];   // emails currently listed, used by "Copy all emails"
+
+function initSubscriberCopy() {
+  const btn = document.getElementById("subscribers-copy-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    if (subscriberEmails.length === 0) {
+      showSaveResult("There are no subscribers to copy yet.", "warning");
+      return;
+    }
+    try {
+      // Comma-separated, so the list pastes straight into a mailing-list or BCC field
+      await navigator.clipboard.writeText(subscriberEmails.join(", "));
+      showSaveResult(`Copied ${subscriberEmails.length} email address${subscriberEmails.length === 1 ? "" : "es"}.`, "success");
+    } catch (err) {
+      console.error(err);
+      showSaveResult("Couldn't copy automatically. Select the emails in the table and copy them.", "error");
+    }
+  });
+}
+
+async function loadSubscribers() {
+  const fb = initFirebase();
+  const tbody = document.getElementById("subscribers-table-body");
+  if (!tbody) return;
+  if (!fb || !fb.db) {
+    tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">Firebase isn't configured yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">Loading subscribers…</td></tr>`;
+  try {
+    const snapshot = await fb.db.collection("subscribers").orderBy("createdAt", "desc").get();
+    const subscribers = snapshot.docs.map((doc) => doc.data());
+    renderSubscribers(subscribers);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">Couldn't load subscribers. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
+  }
+}
+
+function renderSubscribers(subscribers) {
+  const tbody = document.getElementById("subscribers-table-body");
+  subscriberEmails = subscribers.map((s) => s.email);
+  if (!tbody) return;
+
+  if (subscribers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">No subscribers yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = subscribers.map((s) => `
+    <tr>
+      <td>${escapeHTML(s.email)}</td>
+      <td>${escapeHTML(formatDate(s.createdAt))}</td>
+      <td><button type="button" class="dash-view-btn dash-delete-btn" data-delete-subscriber="${escapeHTML(s.email)}">Delete</button></td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll("[data-delete-subscriber]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteSubscriber(btn.dataset.deleteSubscriber));
+  });
+}
+
+async function deleteSubscriber(email) {
+  const fb = initFirebase();
+  if (!fb || !fb.db) return;
+  if (!window.confirm(`Remove ${email} from the subscribers list?`)) return;
+
+  try {
+    await fb.db.collection("subscribers").doc(email).delete();
+    showSaveResult("Subscriber removed.", "success");
+    loadSubscribers();
+  } catch (err) {
+    console.error(err);
+    showSaveResult("Couldn't remove this subscriber. Please try again.", "error");
+  }
 }
 
 /* ---------- Local (unsynced) orders fallback ---------- */
@@ -488,12 +624,18 @@ async function loadProductStatuses() {
   const fb = initFirebase();
   if (fb && fb.db) {
     try {
-      const [statusSnap, priceSnap] = await Promise.all([
+      const [statusSnap, priceSnap, stockSnap] = await Promise.all([
         fb.db.collection("productStatus").get(),
-        fb.db.collection("productPrices").get()
+        fb.db.collection("productPrices").get(),
+        fb.db.collection("productStock").get()
       ]);
       liveProductStatuses = {};
       liveProductPrices = {};
+      liveProductStock = {};
+      stockSnap.docs.forEach((doc) => {
+        const n = Number(doc.data().stock);
+        if (Number.isInteger(n) && n >= 0) liveProductStock[doc.id] = n;
+      });
       statusSnap.docs.forEach((doc) => {
         const status = doc.data().status;
         if (status) liveProductStatuses[doc.id] = String(status).toUpperCase();
@@ -506,7 +648,7 @@ async function loadProductStatuses() {
       console.error("Failed to load product data:", err);
       const message = `<tr><td colspan="5" class="dash-empty">Couldn't load live data. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
       document.getElementById("products-table-body").innerHTML = message;
-      document.getElementById("prices-table-body").innerHTML = message.replace('colspan="5"', 'colspan="4"');
+      document.getElementById("prices-table-body").innerHTML = message;
       return;
     }
   }
@@ -575,7 +717,7 @@ function renderPricesTable() {
   invalidPriceIds.clear();
 
   if (getCatalogProducts().length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="dash-empty">No products found — check js/products-data.js is loaded.</td></tr>`;
     return;
   }
 
@@ -583,7 +725,7 @@ function renderPricesTable() {
   groupedProducts().forEach((items, name) => {
     html += `
       <tr class="dash-group-row">
-        <th colspan="4">${escapeHTML(name)}</th>
+        <th colspan="5">${escapeHTML(name)}</th>
       </tr>`;
     html += items.map(priceRowHTML).join("");
   });
@@ -591,6 +733,9 @@ function renderPricesTable() {
 
   tbody.querySelectorAll(".dash-price-input").forEach((input) => {
     input.addEventListener("input", () => setPendingPrice(input));
+  });
+  tbody.querySelectorAll(".dash-stock-input").forEach((input) => {
+    input.addEventListener("input", () => setPendingStock(input));
   });
 }
 
@@ -606,7 +751,43 @@ function priceRowHTML(p) {
           data-price-id="${escapeHTML(p.id)}" value="${pending !== undefined ? pending : ""}"
           placeholder="Leave blank to keep">
       </td>
+      <td>${p.category === "Bread Cloths" || p.category === "Tea Cozies" ? stockCellHTML(p) : "—"}</td>
     </tr>`;
+}
+
+/* Stock cell for bread cloths: what is saved now, and a box for a new number */
+function stockCellHTML(p) {
+  const saved = liveProductStock[p.id];
+  const pending = pendingStock[p.id];
+  return `
+    <div>Now: <strong>${saved !== undefined ? saved : "not set"}</strong></div>
+    <input type="number" min="0" step="1" inputmode="numeric" class="dash-stock-input"
+      data-stock-id="${escapeHTML(p.id)}" value="${pending !== undefined ? pending : ""}"
+      placeholder="Leave blank to keep">`;
+}
+
+/* Reads a Stock box. Blank = no change. Must be a whole number, 0 or more. */
+function setPendingStock(input) {
+  const id = input.dataset.stockId;
+  const raw = input.value.trim();
+  const redKey = "stock:" + id;
+
+  delete pendingStock[id];
+  invalidPriceIds.delete(redKey);
+  input.classList.remove("is-invalid");
+
+  if (raw !== "") {
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 0) {
+      invalidPriceIds.add(redKey);
+      input.classList.add("is-invalid");
+    } else if (n !== liveProductStock[id]) {
+      pendingStock[id] = n;
+    }
+  }
+
+  input.closest("tr").classList.toggle("dash-row-changed", pendingStock[id] !== undefined || pendingPrices[id] !== undefined);
+  updateSaveBar();
 }
 
 /* Reads a New Price box. Blank = no change. Must be a whole number above 0. */
@@ -671,11 +852,15 @@ function collectChanges() {
     })
     .filter(Boolean);
 
-  return { orders, products, prices, details, invalid: invalidPriceIds.size };
+  const stock = Object.entries(pendingStock)
+    .map(([id, n]) => ({ id, stock: n, product: findProduct(id) }))
+    .filter(c => c.product && liveProductStock[c.id] !== c.stock);
+
+  return { orders, products, prices, details, stock, invalid: invalidPriceIds.size };
 }
 
 function changeCount(changes) {
-  return changes.orders.length + changes.products.length + changes.prices.length + changes.details.length;
+  return changes.orders.length + changes.products.length + changes.prices.length + changes.details.length + changes.stock.length;
 }
 
 function hasUnsavedChanges() {
@@ -690,7 +875,7 @@ function updateSaveBar() {
   const countEl = document.getElementById("dash-savebar-count");
 
   if (invalidPriceIds.size > 0) {
-    countEl.innerHTML = `<strong>Fix the red New Price boxes</strong> (whole numbers above 0)`;
+    countEl.innerHTML = `<strong>Fix the red boxes</strong> (New Price: whole numbers above 0; Stock: whole numbers, 0 or more)`;
   } else {
     countEl.innerHTML = count === 0
       ? "No unsaved changes"
@@ -717,6 +902,7 @@ function cancelChanges() {
   pendingProductStatus = {};
   pendingPrices = {};
   pendingDetails = {};
+  pendingStock = {};
   invalidPriceIds.clear();
 
   renderOrdersTable();
@@ -731,7 +917,7 @@ async function saveChanges() {
   const total = changeCount(changes);
 
   if (changes.invalid > 0) {
-    alert("Fix the red New Price boxes first. Prices must be whole numbers above 0.");
+    alert("Fix the red boxes first. Prices must be whole numbers above 0. Stock must be whole numbers, 0 or more.");
     return;
   }
   if (total === 0) return;
@@ -741,6 +927,10 @@ async function saveChanges() {
   if (changes.products.length) parts.push(`${changes.products.length} product status change${changes.products.length === 1 ? "" : "s"}`);
   if (changes.prices.length) parts.push(`${changes.prices.length} price change${changes.prices.length === 1 ? "" : "s"}`);
   if (changes.details.length) parts.push(`${changes.details.length} details change${changes.details.length === 1 ? "" : "s"}`);
+  if (changes.stock.length) parts.push(`${changes.stock.length} stock change${changes.stock.length === 1 ? "" : "s"}`);
+
+  const cancelling = changes.orders.filter((c) => c.status === "cancelled").length;
+  if (cancelling > 0 && !window.confirm(`You are cancelling ${cancelling} order${cancelling === 1 ? "" : "s"}.\n\n${RESTOCK_REMINDER}`)) return;
 
   const willEmail = changes.orders.some((c) => typeof ORDER_STATUS_EMAILS !== "undefined" && ORDER_STATUS_EMAILS[c.status]);
   const emailNote = willEmail ? "\n\nClients will be emailed about confirmed, shipped, completed or cancelled orders." : "";
@@ -774,6 +964,9 @@ async function saveChanges() {
         updatedAt: now
       }, { merge: true });
     });
+    changes.stock.forEach((c) => {
+      batch.set(fb.db.collection("productStock").doc(c.id), { stock: c.stock, updatedAt: now }, { merge: true });
+    });
 
     await batch.commit();
   } catch (err) {
@@ -789,6 +982,7 @@ async function saveChanges() {
   pendingProductStatus = {};
   pendingPrices = {};
   pendingDetails = {};
+  pendingStock = {};
   invalidPriceIds.clear();
 
   // Email clients whose order status changed (confirmed, shipped, completed, cancelled).

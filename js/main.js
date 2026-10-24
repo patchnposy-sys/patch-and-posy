@@ -94,7 +94,7 @@ function productCardHTML(product) {
     : "";
 
   const photoStyle = product.image
-    ? `background-image:url('${escapeHTML(product.image)}'); background-size:cover; background-position:center;`
+    ? `background-image:url('${escapeHTML(smallPath(product.image))}'); background-size:cover; background-position:center;`
     : `background: linear-gradient(135deg, ${(product.swatch || ["#E0A83E", "#C0396B"]).join(", ")});`;
 
   const actionHTML = buyActionsHTML(product.id, isAvailable, "Add to bag");
@@ -176,7 +176,7 @@ function renderEventGallery(photos) {
   gallery.innerHTML = photos.map((photo) => `
     <figure class="event-card">
       <button type="button" class="event-photo" data-image="${escapeHTML(photo.image)}" data-caption="${escapeHTML(photo.caption || "")}">
-        <img src="${escapeHTML(photo.image)}" alt="${escapeHTML(photo.caption || "Event photo")}" loading="lazy">
+        <img src="${escapeHTML(smallPath(photo.image))}" alt="${escapeHTML(photo.caption || "Event photo")}" loading="lazy">
       </button>
       <figcaption class="event-caption">${escapeHTML(photo.caption || "")}</figcaption>
     </figure>
@@ -187,6 +187,7 @@ function renderEventGallery(photos) {
   });
 }
 
+let lightboxToken = 0;
 function openLightbox(imageSrc, caption) {
   const overlay = document.getElementById("lightbox-overlay");
   const modal = document.getElementById("lightbox-modal");
@@ -194,9 +195,29 @@ function openLightbox(imageSrc, caption) {
   const captionEl = document.getElementById("lightbox-caption");
   if (!overlay || !modal || !img) return;
 
-  img.src = imageSrc;
+  const token = ++lightboxToken;
+  const smallSrc = String(imageSrc).replace(/(^|\/)images\/(?!small\/)/, "$1images/small/");
+  let fullReady = false;
+  img.removeAttribute("src");
+  img.style.visibility = "hidden";
   img.alt = caption || "Event photo";
   if (captionEl) captionEl.textContent = caption || "";
+
+  if (smallSrc !== imageSrc) {
+    const small = new Image();
+    small.onload = () => {
+      if (token === lightboxToken && !fullReady) { img.src = smallSrc; img.style.visibility = ""; }
+    };
+    small.src = smallSrc;
+  }
+  const full = new Image();
+  full.onload = () => {
+    if (token !== lightboxToken) return;
+    fullReady = true;
+    img.src = imageSrc;
+    img.style.visibility = "";
+  };
+  full.src = imageSrc;
 
   overlay.classList.add("is-open");
   modal.classList.add("is-open");
@@ -268,18 +289,28 @@ function closeBreadModal() {
   document.body.style.overflow = "";
 }
 
-function showBreadColours() {
+/* A bread cloth or tea cozy design with no stock left shows SOLD on its grid tile */
+function markSoldOutTiles(root) {
+  root.querySelectorAll("[data-colour-id], [data-tea-id]").forEach((btn) => {
+    const id = btn.dataset.colourId || btn.dataset.teaId;
+    const tagEl = btn.querySelector(`[data-tag-for="${id}"]`);
+    if (!tagEl || breadStockOf({ id }) > 0) return;
+    tagEl.textContent = "SOLD";
+    tagEl.classList.remove("patch-tag-available", "tc-tag-available");
+  });
+}
+
+async function showBreadColours() {
   const body = document.getElementById("bread-body");
   if (!body) return;
 
   body.innerHTML = `
     <h3 class="bread-title">Bread Cloths</h3>
     <p class="bread-description">${escapeHTML(BREAD_CLOTH_DESCRIPTION)}</p>
-    <p class="bread-hint">Choose a colour to see the designs.</p>
     <div class="bread-colour-grid">
       ${breadProducts().map(p => `
         <button type="button" class="bread-colour" data-colour-id="${escapeHTML(p.id)}">
-          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <img src="${escapeHTML(smallPath(p.image))}" alt="${escapeHTML(p.name)}" loading="lazy">
           <span>${escapeHTML(p.name.replace("Bread Cloth: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
@@ -287,51 +318,75 @@ function showBreadColours() {
   body.querySelectorAll("[data-colour-id]").forEach((btn) => {
     btn.addEventListener("click", () => showBreadDetail(btn.dataset.colourId));
   });
+
+  await loadLiveData();
+  await refreshLiveStock();
+  markSoldOutTiles(body);
 }
 
-function showBreadDetail(id) {
-  const body = document.getElementById("bread-body");
-  const p = breadProducts().find(x => x.id === id);
-  if (!body || !p) return;
+/* One layout for every bread cloth and tea cozy popup, so the parts sit in the same place for each design */
+async function openStockDetail(body, p, backId, backLabel, backAction) {
+  await loadLiveData();
+  await refreshLiveStock();
 
   const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
-  const available = isLiveAvailable(p);
-  const qtyHTML = available ? `
-    <div class="cart-qty bread-qty">
-      <span>Quantity</span>
-      <button type="button" class="qty-btn" data-qty-action="dec">−</button>
-      <span data-qty-value>1</span>
-      <button type="button" class="qty-btn" data-qty-action="inc">+</button>
-    </div>
-    <p class="bread-hint">Up to ${BREAD_MAX_QTY} for each design.</p>` : "";
+  const stock = breadStockOf(p);
+  const max = maxQtyFor(p);
+  const available = isLiveAvailable(p) && stock > 0;
 
   body.innerHTML = `
-    <button type="button" class="bread-back" id="bread-back">← All colours</button>
+    <button type="button" class="bread-back" id="${backId}">${backLabel}</button>
     <h3 class="bread-title">${escapeHTML(p.name)}</h3>
     <div class="bread-photos tc-zoom">
       ${photos.map(src => imgTag(src, p.name)).join("")}
     </div>
     <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
+    <p class="bread-stock${stock > 0 ? "" : " bread-stock-out"}">${stock > 0 ? `In stock: <strong>${stock}</strong>` : "<strong>Sold out</strong>"}</p>
     ${tileStatusHTML(p)}
     ${detailBlocksHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${qtyHTML}${buyActionsHTML(p.id, available, "Add to bag")}</div>`;
+    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">
+      <div class="cart-qty bread-qty">
+        <span>Quantity</span>
+        <button type="button" class="qty-btn" data-qty-action="dec"${available ? "" : " disabled"}>−</button>
+        <span data-qty-value>1</span>
+        <button type="button" class="qty-btn" data-qty-action="inc"${available ? "" : " disabled"}>+</button>
+      </div>
+      <p class="bread-hint">${available ? `Up to ${max} for each design.` : ""}</p>
+      <div class="patch-actions" data-actions-for="${escapeHTML(p.id)}">
+        <button type="button" class="btn-add-bag${available ? "" : " btn-add-bag-disabled"}" data-product-id="${escapeHTML(p.id)}"${available ? "" : " disabled"}>Add to bag</button>
+      </div>
+    </div>`;
 
-  document.getElementById("bread-back").addEventListener("click", showBreadColours);
-  setupBreadQuantity(body);
+  document.getElementById(backId).addEventListener("click", backAction);
+  if (available) setupBreadQuantity(body, max);
   attachAddToBagHandlers();
-  applyLiveProductStatuses();
+  await applyLiveProductStatuses();
+  // No stock left: show SOLD, even though the product's own tag says AVAILABLE
+  if (stock < 1) {
+    body.querySelectorAll(`[data-tag-for="${p.id}"]`).forEach((tagEl) => {
+      tagEl.textContent = "SOLD";
+      tagEl.classList.remove("patch-tag-available", "tc-tag-available");
+    });
+  }
 }
 
-/* Quantity box for bread cloths: 1 to BREAD_MAX_QTY */
-function setupBreadQuantity(body) {
+async function showBreadDetail(id) {
+  const body = document.getElementById("bread-body");
+  const p = breadProducts().find(x => x.id === id);
+  if (!body || !p) return;
+  await openStockDetail(body, p, "bread-back", "← All colours", showBreadColours);
+}
+
+/* Quantity box for bread cloths: 1 up to the lower of BREAD_MAX_QTY and the stock left */
+function setupBreadQuantity(body, max = BREAD_MAX_QTY) {
   const value = body.querySelector("[data-qty-value]");
   if (!value) return;
   const incBtn = body.querySelector('[data-qty-action="inc"]');
   const decBtn = body.querySelector('[data-qty-action="dec"]');
   const update = (next) => {
-    const n = Math.min(Math.max(next, 1), BREAD_MAX_QTY);
+    const n = Math.min(Math.max(next, 1), max);
     value.textContent = n;
-    incBtn.disabled = n >= BREAD_MAX_QTY;
+    incBtn.disabled = n >= max;
     decBtn.disabled = n <= 1;
   };
   incBtn.addEventListener("click", () => update(Number(value.textContent) + 1));
@@ -394,7 +449,31 @@ const LOCAL_SOLD_KEY = "patchAndPosyLocallySold";
 let liveStatusById = {};
 let livePriceById = {};
 let liveDetailsById = {};   // productDetails/{id} -> { description, dimensions, care }
+let liveStockById = {};     // productStock/{id} -> { stock: 4 } (bread cloths only)
 let liveLoadPromise = null;
+
+/* Pieces left for a bread cloth design. Not set yet in the dashboard = 0 (not sold until stock is entered). */
+function breadStockOf(p) {
+  const n = liveStockById[p.id];
+  return Number.isInteger(n) ? n : 0;
+}
+
+/* Re-reads the stock counts, so a design shows the latest number when it is opened */
+async function refreshLiveStock() {
+  const fb = typeof initFirebase === "function" ? initFirebase() : null;
+  if (!fb || !fb.db) return;
+  try {
+    const snap = await fb.db.collection("productStock").get();
+    const fresh = {};
+    snap.docs.forEach((doc) => {
+      const n = Number(doc.data().stock);
+      if (Number.isInteger(n) && n >= 0) fresh[doc.id] = n;
+    });
+    liveStockById = fresh;
+  } catch (err) {
+    console.error("Couldn't refresh bread cloth stock:", err);
+  }
+}
 
 function loadLiveData() {
   if (!liveLoadPromise) {
@@ -429,6 +508,19 @@ function loadLiveData() {
           detailSnap.docs.forEach((doc) => { liveDetailsById[doc.id] = doc.data(); });
         } catch (err) {
           console.error("Couldn't load product details:", err);
+        }
+      }
+
+      // Bread cloth stock: kept apart so a problem here never stops statuses and prices from loading.
+      if (fb && fb.db) {
+        try {
+          const stockSnap = await fb.db.collection("productStock").get();
+          stockSnap.docs.forEach((doc) => {
+            const n = Number(doc.data().stock);
+            if (Number.isInteger(n) && n >= 0) liveStockById[doc.id] = n;
+          });
+        } catch (err) {
+          console.error("Couldn't load bread cloth stock:", err);
         }
       }
 
@@ -585,11 +677,27 @@ function initNewsletterForm() {
       return;
     }
 
-    // TODO: connect this to your actual mailing-list provider
-    // (Mailchimp, Klaviyo, a serverless function, etc). For now this
-    // just confirms the input looks right and resets the field.
-    showNote("Thank you. You are now subscribed.", "success");
-    form.reset();
+    const address = email.toLowerCase();
+    const fb = typeof initFirebase === "function" ? initFirebase() : null;
+    if (!fb || !fb.db) {
+      showNote("Sorry, we couldn't save your email right now. Please try again later.", "error");
+      return;
+    }
+
+    // Saved to the "subscribers" collection; the admin sees it in the dashboard's Subscribers tab.
+    // The address is the document ID, so the same email is never listed twice.
+    fb.db.collection("subscribers").doc(address).set({
+      email: address,
+      createdAt: new Date().toISOString()
+    })
+      .then(() => {
+        showNote("Thank you. You are now on our list.", "success");
+        form.reset();
+      })
+      .catch((err) => {
+        console.error("Subscription failed:", err);
+        showNote("Sorry, something went wrong. Please try again.", "error");
+      });
   });
 
   function showNote(message, state) {
@@ -648,11 +756,10 @@ function showPotDesigns() {
   body.innerHTML = `
     <h3 class="bread-title">Pot Holders</h3>
     <p class="bread-description">${escapeHTML(POT_HOLDER_DESCRIPTION)}</p>
-    <p class="bread-hint">Explore the collection to find your favorite.</p>
     <div class="bread-colour-grid">
       ${potProducts().map(p => `
         <button type="button" class="bread-colour" data-pot-id="${escapeHTML(p.id)}">
-          <img src="${escapeHTML(p.image)}" alt="${escapeHTML(p.name)}" loading="lazy">
+          <img src="${escapeHTML(smallPath(p.image))}" alt="${escapeHTML(p.name)}" loading="lazy">
           <span>${escapeHTML(p.name.replace("Pot Holder: ", ""))}</span>${tileRowHTML(p)}
         </button>`).join("")}
     </div>`;
@@ -735,14 +842,13 @@ function closeTeaModal() {
   document.body.style.overflow = "";
 }
 
-function showTeaDesigns() {
+async function showTeaDesigns() {
   const body = document.getElementById("tea-body");
   if (!body) return;
 
   body.innerHTML = `
     <h3 class="bread-title">Tea Cozies</h3>
     <p class="bread-description">${escapeHTML(TEA_COZY_DESCRIPTION)}</p>
-    <p class="bread-hint">Explore the collection to find your favorite.</p>
     <div class="bread-colour-grid">
       ${teaProducts().map(p => `
         <button type="button" class="bread-colour" data-tea-id="${escapeHTML(p.id)}">
@@ -754,29 +860,17 @@ function showTeaDesigns() {
   body.querySelectorAll("[data-tea-id]").forEach((btn) => {
     btn.addEventListener("click", () => showTeaDetail(btn.dataset.teaId));
   });
+
+  await loadLiveData();
+  await refreshLiveStock();
+  markSoldOutTiles(body);
 }
 
-function showTeaDetail(id) {
+async function showTeaDetail(id) {
   const body = document.getElementById("tea-body");
   const p = teaProducts().find(x => x.id === id);
   if (!body || !p) return;
-
-  const photos = p.gallery && p.gallery.length ? p.gallery : [p.image];
-
-  body.innerHTML = `
-    <button type="button" class="bread-back" id="tea-back">← All designs</button>
-    <h3 class="bread-title">${escapeHTML(p.name)}</h3>
-    <div class="bread-photos tc-zoom">
-      ${photos.map(src => imgTag(src, p.name)).join("")}
-    </div>
-    <p class="price" data-price-for="${escapeHTML(p.id)}">${formatPKR(p.price)}</p>
-    ${tileStatusHTML(p)}
-    ${detailBlocksHTML(p)}
-    <div class="bread-buy" data-product-id="${escapeHTML(p.id)}">${buyActionsHTML(p.id, isLiveAvailable(p), "Add to bag")}</div>`;
-
-  document.getElementById("tea-back").addEventListener("click", showTeaDesigns);
-  attachAddToBagHandlers();
-  applyLiveProductStatuses();
+  await openStockDetail(body, p, "tea-back", "← All designs", showTeaDesigns);
 }
 
 function initTeaModal() {
@@ -796,7 +890,19 @@ function initTeaModal() {
    Lets a folder's photos work whether the files are .JPG, .jpg, .jpeg or .png. */
 const IMG_EXT_FALLBACKS = [".JPG", ".jpg", ".jpeg", ".JPEG", ".png", ".PNG", ".webp", ".WEBP", ".gif"];
 
+/* Web-size photos live in images/small/ (same folders and file names as images/).
+   Cards, grids and banners load those; the zoom (lightbox) still opens the full-size original. */
+const SMALL_PHOTO_FOLDER = "images/small/";
+function smallPath(src) {
+  const s = String(src || "");
+  return s.startsWith("images/") ? SMALL_PHOTO_FOLDER + s.slice("images/".length) : s;
+}
+function fullSizePath(src) {
+  return String(src || "").replace(/(^|\/)images\/small\//, "$1images/");
+}
+
 function imgTag(src, alt, mode) {
+  src = smallPath(src);
   // Always start with IMG_EXT_FALLBACKS[0] (".JPG") and strip any extension written in the data,
   // so uppercase .JPG files load and the retry list is tried in order from the start.
   const m = String(src).match(/\.[^./]+$/);
@@ -864,7 +970,6 @@ function showTableclothStyles() {
   if (!body) return;
   body.innerHTML = `
     <h3 class="bread-title">Tablecloths · Volume 2</h3>
-    <p class="bread-hint">Tap a design to see its photos, description and price.</p>
     ${tableclothStyles().map(s => `
       <section class="tc-style-section">
         <h4 class="tc-style-title">${escapeHTML(s.name)}</h4>
@@ -922,7 +1027,7 @@ function initTableclothModal() {
   // Photos open full size in the lightbox when clicked.
   document.addEventListener("click", (e) => {
     const img = e.target.closest(".tc-zoom img");
-    if (img) openLightbox(img.currentSrc || img.src, img.alt);
+    if (img) openLightbox(fullSizePath(img.currentSrc || img.src), img.alt);
   });
   document.getElementById("tablecloth-close")?.addEventListener("click", closeTableclothModal);
   document.getElementById("tablecloth-overlay")?.addEventListener("click", closeTableclothModal);
@@ -1089,7 +1194,6 @@ function showKidsDesigns() {
   body.innerHTML = `
     <h3 class="bread-title">Kids Dasterkhwan</h3>
     <p class="bread-description">${escapeHTML(KIDS_DASTERKHWAN_DESCRIPTION)}</p>
-    <p class="bread-hint">Choose a design to see all of its photos.</p>
     <div class="bread-colour-grid">
       ${kidsProducts().map(p => `
         <button type="button" class="bread-colour" data-kd-id="${escapeHTML(p.id)}">
@@ -1156,7 +1260,7 @@ const HERO_SLIDES = [
 /* Thumbnails load by their exact file name (no .JPG-first guessing), so the first slide shows at once */
 function thumbImg(src, alt, eager) {
   const loading = eager ? "eager" : "lazy";
-  return `<img src="${escapeHTML(src)}" alt="${escapeHTML(alt || "")}" loading="${loading}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;display:block">`;
+  return `<img src="${escapeHTML(smallPath(src))}" alt="${escapeHTML(alt || "")}" loading="${loading}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;display:block">`;
 }
 
 function renderHeroSlideshow() {
@@ -1216,7 +1320,7 @@ function renderHeroSlideshow() {
   });
 
   // Load the other slides one at a time after the page has loaded, so the first slide is not held back
-  const queue = slides.slice(1).map(s => s.src);
+  const queue = slides.slice(1).map(s => smallPath(s.src));
   function loadNext() {
     const src = queue.shift();
     if (!src) return;

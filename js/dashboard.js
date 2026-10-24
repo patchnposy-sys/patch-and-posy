@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initOrderDetailModal();
   initSaveBar();
   renderLocalOrders();
+  initSubscriberCopy();
   if (typeof initEmailJS === "function") initEmailJS();
 });
 
@@ -116,6 +117,7 @@ function initTabs() {
       if (tab.dataset.tab === "clients") renderClients();
       if (tab.dataset.tab === "products" || tab.dataset.tab === "prices" || tab.dataset.tab === "details") loadProductStatuses();
       if (tab.dataset.tab === "local") renderLocalOrders();
+      if (tab.dataset.tab === "subscribers") loadSubscribers();
     });
   });
 }
@@ -328,6 +330,87 @@ function renderClients() {
   tbody.querySelectorAll("[data-delete-client]").forEach((btn) => {
     btn.addEventListener("click", () => deleteClient(btn.dataset.deleteClient));
   });
+}
+
+/* ---------- Subscribers (newsletter emails from the website) ---------- */
+let subscriberEmails = [];   // emails currently listed, used by "Copy all emails"
+
+function initSubscriberCopy() {
+  const btn = document.getElementById("subscribers-copy-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    if (subscriberEmails.length === 0) {
+      showSaveResult("There are no subscribers to copy yet.", "warning");
+      return;
+    }
+    try {
+      // Comma-separated, so the list pastes straight into a mailing-list or BCC field
+      await navigator.clipboard.writeText(subscriberEmails.join(", "));
+      showSaveResult(`Copied ${subscriberEmails.length} email address${subscriberEmails.length === 1 ? "" : "es"}.`, "success");
+    } catch (err) {
+      console.error(err);
+      showSaveResult("Couldn't copy automatically. Select the emails in the table and copy them.", "error");
+    }
+  });
+}
+
+async function loadSubscribers() {
+  const fb = initFirebase();
+  const tbody = document.getElementById("subscribers-table-body");
+  if (!tbody) return;
+  if (!fb || !fb.db) {
+    tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">Firebase isn't configured yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">Loading subscribers…</td></tr>`;
+  try {
+    const snapshot = await fb.db.collection("subscribers").orderBy("createdAt", "desc").get();
+    const subscribers = snapshot.docs.map((doc) => doc.data());
+    renderSubscribers(subscribers);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">Couldn't load subscribers. Check your Firestore Security Rules (see SETUP.md).</td></tr>`;
+  }
+}
+
+function renderSubscribers(subscribers) {
+  const tbody = document.getElementById("subscribers-table-body");
+  subscriberEmails = subscribers.map((s) => s.email);
+  if (!tbody) return;
+
+  if (subscribers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="dash-empty">No subscribers yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = subscribers.map((s) => `
+    <tr>
+      <td>${escapeHTML(s.email)}</td>
+      <td>${escapeHTML(formatDate(s.createdAt))}</td>
+      <td><button type="button" class="dash-view-btn dash-delete-btn" data-delete-subscriber="${escapeHTML(s.email)}">Delete</button></td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll("[data-delete-subscriber]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteSubscriber(btn.dataset.deleteSubscriber));
+  });
+}
+
+async function deleteSubscriber(email) {
+  const fb = initFirebase();
+  if (!fb || !fb.db) return;
+  if (!window.confirm(`Remove ${email} from the subscribers list?`)) return;
+
+  try {
+    await fb.db.collection("subscribers").doc(email).delete();
+    showSaveResult("Subscriber removed.", "success");
+    loadSubscribers();
+  } catch (err) {
+    console.error(err);
+    showSaveResult("Couldn't remove this subscriber. Please try again.", "error");
+  }
 }
 
 /* ---------- Local (unsynced) orders fallback ---------- */

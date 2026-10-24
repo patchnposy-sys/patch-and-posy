@@ -677,11 +677,27 @@ function initNewsletterForm() {
       return;
     }
 
-    // TODO: connect this to your actual mailing-list provider
-    // (Mailchimp, Klaviyo, a serverless function, etc). For now this
-    // just confirms the input looks right and resets the field.
-    showNote("Thank you. You are now subscribed.", "success");
-    form.reset();
+    const address = email.toLowerCase();
+    const fb = typeof initFirebase === "function" ? initFirebase() : null;
+    if (!fb || !fb.db) {
+      showNote("Sorry, we couldn't save your email right now. Please try again later.", "error");
+      return;
+    }
+
+    // Saved to the "subscribers" collection; the admin sees it in the dashboard's Subscribers tab.
+    // The address is the document ID, so the same email is never listed twice.
+    fb.db.collection("subscribers").doc(address).set({
+      email: address,
+      createdAt: new Date().toISOString()
+    })
+      .then(() => {
+        showNote("Thank you. You are now on our list.", "success");
+        form.reset();
+      })
+      .catch((err) => {
+        console.error("Subscription failed:", err);
+        showNote("Sorry, something went wrong. Please try again.", "error");
+      });
   });
 
   function showNote(message, state) {

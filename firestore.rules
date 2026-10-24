@@ -65,6 +65,19 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Newsletter subscribers: anyone may add a valid email (the email is the document ID);
+    // only the admin may read or delete them
+    function validSubscriber(id, d) {
+      return d.keys().hasOnly(['email', 'createdAt'])
+        && validEmail(d.email)
+        && d.email == id
+        && validText(d.createdAt, 40);
+    }
+    match /subscribers/{id} {
+      allow create, update: if validSubscriber(id, request.resource.data);
+      allow read, delete: if isAdmin();
+    }
+
     // Products shown on the website: public read, admin write only
     match /productStatus/{id} {
       allow read: if true;
